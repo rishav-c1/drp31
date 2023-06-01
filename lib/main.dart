@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Uplift',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Uplift'),
     );
   }
 }
@@ -88,14 +88,14 @@ class _MyHomePageState extends State<MyHomePage> {
             const Text('Add Task:'),
             TextField(
               controller: taskController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Enter a new task',
               ),
             ),
             ElevatedButton(
               onPressed: addTask,
-              child: Text('Submit'),
+              child: const Text('Submit'),
             ),
             const Text('\n\nList of Tasks:'),
             Expanded(  // Adding Expanded here
@@ -103,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 stream: db.collection('tasks').snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return CircularProgressIndicator();
+                    return const CircularProgressIndicator();
                   }
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
                   return ListView(
