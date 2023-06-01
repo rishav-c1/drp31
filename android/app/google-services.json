@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "207872501897",
+    "project_id": "drp-31",
+    "storage_bucket": "drp-31.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:207872501897:android:3c6cff9eea93bf85507e58",
+        "android_client_info": {
+          "package_name": "com.example.rishav.drp31"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBe2l5DdFhiX6L7IjC6qlH-v0vrdM0aTDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
