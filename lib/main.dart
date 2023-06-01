@@ -97,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: addTask,
               child: Text('Submit'),
             ),
+            const Text('\n\nList of Tasks:'),
             Expanded(  // Adding Expanded here
               child: StreamBuilder<QuerySnapshot>(
                 stream: db.collection('tasks').snapshots(),
