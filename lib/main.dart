@@ -76,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       controller: taskController,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: 'Enter a new task',
+                        hintText: 'Andreas',
                       ),
                     ),
                   ),
