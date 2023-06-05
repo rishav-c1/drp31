@@ -35,10 +35,10 @@ jobs:
       - name: Build APK
         run: flutter build apk --debug --split-per-abi
 
-      - name: Create Release
-        uses: ncipollo/release-action@v1.12.0
-        with:
-          artifacts: "build/app/outputs/apk/debug/*.apk"
-          token: ${{ secrets.TOKEN }}
+#      - name: Create Release
+#        uses: ncipollo/release-action@v1.12.0
+#        with:
+#          artifacts: "build/app/outputs/apk/debug/*.apk"
+#          token: ${{ secrets.TOKEN }}
 
 
