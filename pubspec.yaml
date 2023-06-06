@@ -1,3 +1,5 @@
+#  import 'package:best_flutter_ui_templates/best_flutter_ui_templates.dart';
+
 name: drp31
 description: To-do
 # The following line prevents the package from being accidentally published to
@@ -30,7 +32,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+#  best_flutter_ui_templates:
+#    path: /Users/rosa/Downloads/Best-Flutter-UI-Templates-master/best_flutter_ui_templates
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -51,9 +51,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void addTask() async {
     String task = taskController.text;
     if (task.isNotEmpty) {
-      await db.collection('tasks').add({'task': task});
+      await db.collection('tasks').add({'task': task, 'achieved': false});
       taskController.clear();
     }
+  }
+
+  void toggleAchieved(String taskId, bool currentStatus) async {
+    await db.collection('tasks').doc(taskId).update({'achieved': !currentStatus});
   }
 
   @override
@@ -76,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       controller: taskController,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: 'Andreas',
+                        hintText: 'Add a goal',
                       ),
                     ),
                   ),
@@ -101,9 +105,21 @@ class _MyHomePageState extends State<MyHomePage> {
                     shrinkWrap: true,
                     itemCount: documents.length,
                     itemBuilder: (context, index) {
+                      final task = documents[index];
+                      final taskId = task.id;
+                      final data = task.data() as Map<String, dynamic>;;
+                      final isAchieved = data?['achieved'] ?? false;
                       return Card(
+                        color: isAchieved ? Colors.green[100] : null,
                         child: ListTile(
-                          title: Text(documents[index]['task'] ?? 'Default task'),
+                          title: Text(data?['task'] ?? 'Default task'),
+                          trailing: TextButton(
+                            onPressed: () => toggleAchieved(taskId, isAchieved),
+                            child: Text(
+                              isAchieved ? 'Achieved' : 'Mark Achieved',
+                              style: TextStyle(color: isAchieved ? Colors.green : Colors.black),
+                            ),
+                          ),
                         ),
                       );
                     },
