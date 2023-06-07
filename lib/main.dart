@@ -41,6 +41,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   final taskController = TextEditingController();
+  int totalPoints = 0;
 
   @override
   void dispose() {
@@ -51,13 +52,18 @@ class _MyHomePageState extends State<MyHomePage> {
   void addTask() async {
     String task = taskController.text;
     if (task.isNotEmpty) {
-      await db.collection('tasks').add({'task': task, 'achieved': false});
+      await db.collection('tasks').add({'task': task, 'achieved': false, 'points': 10});
       taskController.clear();
     }
   }
 
-  void toggleAchieved(String taskId, bool currentStatus) async {
+  void toggleAchieved(String taskId, bool currentStatus, int points) async {
     await db.collection('tasks').doc(taskId).update({'achieved': !currentStatus});
+    if (!currentStatus) {
+      setState(() {
+        totalPoints += points;
+      });
+    }
   }
 
   @override
@@ -92,6 +98,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
+            Text(
+              "My Points: ${totalPoints}pts", // Display total points
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const Text("Today's Tasks 💪"),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
@@ -109,14 +119,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       final taskId = task.id;
                       final data = task.data() as Map<String, dynamic>;;
                       final isAchieved = data?['achieved'] ?? false;
+                      final points = data?['points'] ?? 0;
                       return Card(
                         color: isAchieved ? Colors.green[100] : null,
                         child: ListTile(
                           title: Text(data?['task'] ?? 'Default task'),
                           trailing: TextButton(
-                            onPressed: () => toggleAchieved(taskId, isAchieved),
+                            onPressed: () => toggleAchieved(taskId, isAchieved, points),
                             child: Text(
-                              isAchieved ? 'Achieved' : 'Mark Achieved',
+                              isAchieved ? 'Achieved  +${points}pts' : 'Mark Achieved',
                               style: TextStyle(color: isAchieved ? Colors.green : Colors.black),
                             ),
                           ),
