@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'addGoal.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -40,21 +41,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
-  final taskController = TextEditingController();
   int totalPoints = 0;
 
   @override
   void dispose() {
-    taskController.dispose();
     super.dispose();
-  }
-
-  void addTask() async {
-    String task = taskController.text;
-    if (task.isNotEmpty) {
-      await db.collection('tasks').add({'task': task, 'achieved': false, 'points': 10});
-      taskController.clear();
-    }
   }
 
   void toggleAchieved(String taskId, bool currentStatus, int points) async {
@@ -77,26 +68,15 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextField(
-                      controller: taskController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Add a goal',
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: addTask,
-                    icon: const Icon(Icons.send),
-                    color: Colors.deepPurple,
-                  ),
-                ],
-              ),
+            FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddGoalPage()),
+                );
+              },
+              backgroundColor: Colors.deepPurple,
+              child: Icon(Icons.add, color: Colors.white),
             ),
             Text(
               "My Points: ${totalPoints}pts", // Display total points
