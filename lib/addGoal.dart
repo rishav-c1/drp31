@@ -11,17 +11,21 @@ class AddGoalPage extends StatefulWidget {
 class _AddGoalPageState extends State<AddGoalPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   final goalController = TextEditingController();
+  final pointController = TextEditingController();
 
   @override
   void dispose() {
     goalController.dispose();
+    pointController.dispose();
     super.dispose();
   }
   void addGoal() async {
     String goal = goalController.text;
+    String points = pointController.text;
     if (goal.isNotEmpty) {
-      await db.collection('tasks').add({'task': goal, 'achieved': false, 'points': 10});
+      await db.collection('tasks').add({'task': goal, 'achieved': false, 'points': int.parse(points)});
       goalController.clear();
+      pointController.clear();
       Navigator.pop(context); // Go back to the previous page after adding the goal
     }
   }
@@ -45,10 +49,18 @@ class _AddGoalPageState extends State<AddGoalPage> {
                   hintText: 'Enter a goal',
                 ),
               ),
+              TextField(
+                controller: pointController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Enter points',
+                ),
+              ),
               const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: addGoal,
                 child: const Text('Add'),
+                style: ElevatedButton.styleFrom(primary: Colors.deepPurple)
               ),
             ],
           ),
