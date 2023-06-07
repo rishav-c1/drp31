@@ -1,15 +1,16 @@
 on:
   push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
   workflow_dispatch:
 
 name: Test Workflow
 
 jobs:
-
   build:
-  
-    name: Build APK
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
       
@@ -18,23 +19,15 @@ jobs:
           distribution: 'zulu'
           java-version: "12.x"
           cache: 'gradle'
-          
-      - uses: subosito/flutter-action@v1
+      
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.7.0"
+          channel: 'stable'
           cache: true
       
-      - name: Get dependencies
-        run: flutter pub get
-      
-      - name: Test
+      - name: Get flutter dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --debug --split-per-abi
-
-      - name: Create Release
-        uses: ncipollo/release-action@v1.12.0
-        with:
-          artifacts: "build/app/outputs/apk/debug/*.apk"
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build release App Bundle (AAB)
+        run: flutter build appbundle
