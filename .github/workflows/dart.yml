@@ -7,6 +7,8 @@ on:
 
 name: Master Workflow
 
+
+
 jobs:
 
   build:
@@ -35,6 +37,10 @@ jobs:
 
       #- name: Build APK
       #  run: flutter build apk --debug --split-per-abi
+      - name: Create Tag
+        run: |
+          git tag v0.0.${{ github.run_number }}
+          git push origin v0.0.${{ github.run_number }}
 
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
@@ -42,4 +48,4 @@ jobs:
           artifacts: "build/app/outputs/apk/release/*.apk"
           token: ${{ secrets.TOKEN }}
           commit: master
-          tag: v1.0.0
+          tag: v0.0.${{ github.run_number }}
