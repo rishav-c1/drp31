@@ -1,8 +1,11 @@
 on:
   push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
   workflow_dispatch:
 
-name: Local Build
+name: Master Workflow
 
 jobs:
 
