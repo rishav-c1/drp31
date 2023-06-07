@@ -1,10 +1,12 @@
 import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:drp31/weeklyRecap.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'addGoal.dart';
+import 'weeklyRecap.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -42,6 +44,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   int totalPoints = 0;
+  int goalsCompleted = 0;
 
   @override
   void dispose() {
@@ -53,6 +56,13 @@ class _MyHomePageState extends State<MyHomePage> {
     if (!currentStatus) {
       setState(() {
         totalPoints += points;
+        goalsCompleted += 1;
+      });
+    } else {
+      setState(() {
+        totalPoints -= points;
+        int completed = (goalsCompleted > 0)? goalsCompleted - 1 : 0;
+        goalsCompleted = completed;
       });
     }
   }
@@ -68,7 +78,13 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(
+              "Today's Tasks 💪",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text("My Points: ${totalPoints}pts"),
             FloatingActionButton(
+              heroTag: "btn1",
               onPressed: () {
                 Navigator.push(
                   context,
@@ -78,11 +94,6 @@ class _MyHomePageState extends State<MyHomePage> {
               backgroundColor: Colors.deepPurple,
               child: Icon(Icons.add, color: Colors.white),
             ),
-            Text(
-              "My Points: ${totalPoints}pts", // Display total points
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const Text("Today's Tasks 💪"),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
                 stream: db.collection('tasks').snapshots(),
@@ -117,6 +128,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 },
               ),
+            ),
+            FloatingActionButton.extended(
+              heroTag: "btn2",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WeeklyRecapPage(goalsCompleted: goalsCompleted, totalPoints: totalPoints)),
+                );
+              },
+              backgroundColor: Colors.deepPurple,
+              icon: Icon(Icons.add, color: Colors.white),
+              label: Text('Weekly Recap'),
             ),
           ],
         ),

@@ -32,6 +32,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  confetti: ^0.6.0
 #  best_flutter_ui_templates:
 #    path: /Users/rosa/Downloads/Best-Flutter-UI-Templates-master/best_flutter_ui_templates
 
