@@ -2,7 +2,7 @@ on:
   push:
   workflow_dispatch:
 
-name: Local Build
+name: Test Workflow
 
 jobs:
 
