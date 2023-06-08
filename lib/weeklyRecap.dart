@@ -1,19 +1,19 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class WeeklyRecapPage extends StatefulWidget {
-  final int goalsCompleted;
-  final int totalPoints;
+  final String userId;
 
   const WeeklyRecapPage({
-    required this.goalsCompleted,
-    required this.totalPoints,
+    required this.userId,
   });
 
   @override
   State<WeeklyRecapPage> createState() => _WeeklyRecapPage();
 }
 class _WeeklyRecapPage extends State<WeeklyRecapPage> {
+  FirebaseFirestore db = FirebaseFirestore.instance;
   final controller = ConfettiController();
 
   @override
@@ -27,6 +27,33 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> {
     controller.dispose();
     super.dispose();
   }
+
+  Future<int> getUserPoints(String userId) async {
+    final userRef = db.collection('users').doc(userId);
+    final snapshot = await userRef.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final points = data['points'];
+      return points;
+    } else {
+      return 0;
+    }
+  }
+
+  Future<int> getUserCompleted(String userId) async {
+    final userRef = db.collection('users').doc(userId);
+    final snapshot = await userRef.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final completed = data['completed'];
+      return completed;
+    } else {
+      return 0;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +72,7 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> {
             ),
             const SizedBox(height: 32),
             Center(child: Text(
-              'Congrats! This week you have achieved ${widget.goalsCompleted} goals, for a total of ${widget.totalPoints} points.',
+              'Congrats! This week you have achieved ${getUserCompleted(widget.userId)} goals, for a total of ${getUserPoints(widget.userId)} points.',
               style: TextStyle(fontSize: 18),
             ),
             ),

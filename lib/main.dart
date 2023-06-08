@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'addGoal.dart';
+import 'goals.dart';
 import 'leaderboard.dart';
 import 'weeklyRecap.dart';
 import 'firebase_options.dart';
@@ -28,50 +29,40 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Ascent'),
-    );
+      home: UserPage());
   }
 }
+
+// class MyHomePage extends StatefulWidget {
+//   const MyHomePage({Key? key, required this.title}) : super(key: key);
+//
+//   final String title;
+//
+//   @override
+//   State<MyHomePage> createState() => _MyHomePageState();
+// }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  final String userId;
 
-  final String title;
+  const MyHomePage({required this.userId});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyHomePage> createState() => _MyHomePage();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  FirebaseFirestore db = FirebaseFirestore.instance;
-  int totalPoints = 0;
-  int goalsCompleted = 0;
-  int selectedIndex = 0;
+class _MyHomePage extends State<MyHomePage> {
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  Future<String> getUserName(String userId) async {
+    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+    final snapshot = await userRef.get();
 
-  void onItemTapped(int index) {
-    setState(() {
-      selectedIndex = index;
-    });
-  }
-
-  void toggleAchieved(String taskId, bool currentStatus, int points) async {
-    await db.collection('tasks').doc(taskId).update({'achieved': !currentStatus});
-    if (!currentStatus) {
-      setState(() {
-        totalPoints += points;
-        goalsCompleted += 1;
-      });
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final name = data['name'];
+      return name;
     } else {
-      setState(() {
-        totalPoints -= points;
-        int completed = (goalsCompleted > 0)? goalsCompleted - 1 : 0;
-        goalsCompleted = completed;
-      });
+      return '';
     }
   }
 
@@ -79,85 +70,31 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Colors.deepPurple,
+        title: Text(getUserName(widget.userId) as String),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              "Today's Tasks 💪",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 32),
-            Text("My Points: ${totalPoints}pts"),
-            const SizedBox(height: 32),
-            FloatingActionButton(
-              heroTag: "btn1",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AddGoalPage()),
-                );
-              },
-              backgroundColor: Colors.deepPurple,
-              child: Icon(Icons.add, color: Colors.white),
-            ),
-            const SizedBox(height: 32),
-            Flexible(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: db.collection('tasks').snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const CircularProgressIndicator();
-                  }
-                  final List<DocumentSnapshot> documents = snapshot.data!.docs;
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: documents.length,
-                    itemBuilder: (context, index) {
-                      final task = documents[index];
-                      final taskId = task.id;
-                      final data = task.data() as Map<String, dynamic>;;
-                      final isAchieved = data?['achieved'] ?? false;
-                      final points = data?['points'] ?? 0;
-                      return Card(
-                        color: isAchieved ? Colors.green[100] : null,
-                        child: ListTile(
-                          title: Text(data?['task'] ?? 'Default task'),
-                          trailing: TextButton(
-                            onPressed: () => toggleAchieved(taskId, isAchieved, points),
-                            child: Text(
-                              isAchieved ? 'Achieved  +${points}pts' : 'Mark Achieved',
-                              style: TextStyle(color: isAchieved ? Colors.green : Colors.black),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 32),
-            FloatingActionButton.extended(
-              heroTag: "btn2",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => WeeklyRecapPage(goalsCompleted: goalsCompleted, totalPoints: totalPoints)),
-                );
-              },
-              backgroundColor: Colors.deepPurple,
-              icon: Icon(Icons.add, color: Colors.white),
-              label: Text('Weekly Recap'),
-            ),
-          ],
-        ),
+        child: Text('Hello XXX'),
       ),
+    floatingActionButton: FloatingActionButton.extended(
+      heroTag: "btn2",
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WeeklyRecapPage(userId: widget.userId),
+          ),
+      );
+    },
+    backgroundColor: Colors.deepPurple,
+    icon: Icon(Icons.add, color: Colors.white),
+    label: Text('Weekly Recap'),
+  ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.task),
             label: 'Goals',
@@ -167,22 +104,89 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Leaderboard',
           ),
         ],
-        iconSize: 40,
         currentIndex: 0,
         selectedItemColor: Colors.deepPurple,
-    onTap: (int index) {
-      switch (index) {
-        case 0:
-          Navigator.push(context, MaterialPageRoute(
-              builder: (context) => MyHomePage(title: 'Ascent')));
-          break;
-        case 1:
-          Navigator.push(context, MaterialPageRoute(builder: (context) =>
-              LeaderboardPage(totalPoints: totalPoints)));
-          break;
-      }
-      //onItemTapped;
+        onTap: (int index) {
+          switch (index) {
+            case 1:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GoalPage(userId: widget.userId)),
+              );
+              break;
+            case 2:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LeaderboardPage(userId: widget.userId)),
+              );
+              break;
+          }
+        },
+      ),
+    );
+  }
+}
+class UserPage extends StatefulWidget {
+  @override
+  _UserPage createState() => _UserPage();
+}
+
+class _UserPage extends State<UserPage> {
+  FirebaseFirestore db = FirebaseFirestore.instance;
+  final userController = TextEditingController();
+
+  @override
+  void dispose() {
+    userController.dispose();
+    super.dispose();
+  }
+
+  Future<String> addUser(String name) async {
+    if (name.isNotEmpty) {
+      final docRef = await db.collection('users').add({'name': name, 'points': 0, 'completed': 0});
+      return docRef.id;
+    } else {
+      return '';
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Ascent'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: userController,
+                decoration: InputDecoration(
+                  labelText: 'Enter your name',
+                ),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  final name = userController.text;
+                  final userId = addUser(name).toString();
+                  userController.clear();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MyHomePage(userId: userId),
+                    ),
+                  );
+                },
+                child: Text('Create User'),
+              ),
+            ],
+        ),
+      ),
       ),
     );
   }
