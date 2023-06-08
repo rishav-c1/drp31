@@ -31,8 +31,9 @@ jobs:
       - name: Test
         run: flutter pub get
 
-      #- name: Build APK
-      #  run: flutter build apk --debug --split-per-abi
+      - name: Build APK
+        run: flutter build apk --debug --split-per-abi
+        
       - name: Create Tag
         run: |
           git tag v0.0.${{ github.run_number }}
