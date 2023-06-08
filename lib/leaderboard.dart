@@ -12,9 +12,8 @@ class User {
 }
 
 class LeaderboardPage extends StatefulWidget {
-  final String userId;
 
-  const LeaderboardPage({required this.userId});
+  const LeaderboardPage({Key? key}):super(key:key);
 
   @override
   State<LeaderboardPage> createState() => _LeaderboardPage();
@@ -105,11 +104,11 @@ class _LeaderboardPage extends State<LeaderboardPage> {
           switch (index) {
             case 0:
               Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => MyHomePage(userId: widget.userId)));
+                  builder: (context) => MyHomePage()));
                   break;
             case 1:
               Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                  GoalPage(userId: widget.userId)));
+                  GoalPage()));
           }
           //onItemTapped;
         }

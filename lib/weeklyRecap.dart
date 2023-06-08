@@ -2,12 +2,11 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class WeeklyRecapPage extends StatefulWidget {
-  final String userId;
+import 'main.dart';
 
-  const WeeklyRecapPage({
-    required this.userId,
-  });
+class WeeklyRecapPage extends StatefulWidget {
+
+  const WeeklyRecapPage({Key?key}): super(key:key);
 
   @override
   State<WeeklyRecapPage> createState() => _WeeklyRecapPage();
@@ -72,7 +71,7 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> {
             ),
             const SizedBox(height: 32),
             Center(child: Text(
-              'Congrats! This week you have achieved ${getUserCompleted(widget.userId)} goals, for a total of ${getUserPoints(widget.userId)} points.',
+              'Congrats! This week you have achieved ${getUserCompleted(UserPage.userId)} goals, for a total of ${getUserPoints(UserPage.userId)} points.',
               style: TextStyle(fontSize: 18),
             ),
             ),
