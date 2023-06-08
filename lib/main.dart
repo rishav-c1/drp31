@@ -1,12 +1,12 @@
 import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:drp31/feed.dart';
 import 'package:drp31/weeklyRecap.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'addGoal.dart';
-import 'weeklyRecap.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -144,6 +144,18 @@ class _MyHomePageState extends State<MyHomePage> {
               backgroundColor: Colors.deepPurple,
               icon: Icon(Icons.add, color: Colors.white),
               label: Text('Weekly Recap'),
+            ),
+            FloatingActionButton.extended(
+              heroTag: "btn3",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Feed()),
+                );
+              },
+              backgroundColor: Colors.deepPurple,
+              icon: Icon(Icons.add, color: Colors.white),
+              label: Text('Feed'),
             ),
           ],
         ),
