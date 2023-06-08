@@ -97,7 +97,6 @@ class _LeaderboardPage extends State<LeaderboardPage> {
             label: 'Leaderboard',
           ),
         ],
-        iconSize: 40,
         currentIndex: 2,
         selectedItemColor: Colors.deepPurple,
         onTap: (int index) {

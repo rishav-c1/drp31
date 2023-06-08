@@ -11,13 +11,15 @@ class WeeklyRecapPage extends StatefulWidget {
   @override
   State<WeeklyRecapPage> createState() => _WeeklyRecapPage();
 }
+
 class _WeeklyRecapPage extends State<WeeklyRecapPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
-  final controller = ConfettiController();
+  late ConfettiController controller;
 
   @override
   void initState() {
     super.initState();
+    controller = ConfettiController(duration: Duration(seconds: 10));
     controller.play();
   }
 
@@ -65,30 +67,57 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
+            const Text(
               "That's a wrap!",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 32),
-            Center(child: Text(
-              'Congrats! This week you have achieved ${getUserCompleted(UserPage.userId)} goals, for a total of ${getUserPoints(UserPage.userId)} points.',
-              style: TextStyle(fontSize: 18),
-            ),
+            FutureBuilder<int>(
+              future: getUserCompleted(widget.userId),
+              builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else {
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    final completedGoals = snapshot.data;
+                    return FutureBuilder<int>(
+                      future: getUserPoints(widget.userId),
+                      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else {
+                          if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            final totalPoints = snapshot.data;
+                            return Text(
+                              'Congrats! This week you have achieved $completedGoals goals, for a total of $totalPoints points.',
+                              style: const TextStyle(fontSize: 18),
+                            );
+                          }
+                        }
+                      },
+                    );
+                  }
+                }
+              },
             ),
             const SizedBox(height: 8),
             const SizedBox(height: 32),
-            ConfettiWidget(
-              confettiController: controller,
-              blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
-              colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.orange,
-                Colors.purple,
-                Colors.yellow,
-              ],
-            ),
+            // ConfettiWidget(
+            //   confettiController: controller,
+            //   blastDirectionality: BlastDirectionality.explosive,
+            //   shouldLoop: true,
+            //   colors: const [
+            //     Colors.green,
+            //     Colors.blue,
+            //     Colors.orange,
+            //     Colors.purple,
+            //     Colors.yellow,
+            //   ],
+            // ),
           ],
         ),
       ),

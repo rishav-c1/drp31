@@ -71,7 +71,7 @@ class _GoalPageState extends State<GoalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Goals'),
+        title: const Text('My Goals'),
         backgroundColor: Colors.deepPurple,
       ),
       body: Center(
@@ -95,7 +95,7 @@ class _GoalPageState extends State<GoalPage> {
                 );
               },
               backgroundColor: Colors.deepPurple,
-              child: Icon(Icons.add, color: Colors.white),
+              child: const Icon(Icons.add, color: Colors.white),
             ),
             const SizedBox(height: 32),
             Flexible(
