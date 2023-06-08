@@ -82,7 +82,9 @@ class _MyHomePageState extends State<MyHomePage> {
               "Today's Tasks 💪",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 32),
             Text("My Points: ${totalPoints}pts"),
+            const SizedBox(height: 32),
             FloatingActionButton(
               heroTag: "btn1",
               onPressed: () {
@@ -94,6 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
               backgroundColor: Colors.deepPurple,
               child: Icon(Icons.add, color: Colors.white),
             ),
+            const SizedBox(height: 32),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
                 stream: db.collection('tasks').snapshots(),
@@ -129,6 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
             ),
+            const SizedBox(height: 32),
             FloatingActionButton.extended(
               heroTag: "btn2",
               onPressed: () {
