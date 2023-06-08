@@ -34,9 +34,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  final String userId;
 
-  const MyHomePage({required this.userId});
+  const MyHomePage({Key ? key}) : super(key:key);
 
   @override
   State<MyHomePage> createState() => _MyHomePage();
@@ -44,92 +43,75 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePage extends State<MyHomePage> {
 
-  Future<String> getUserName(String userId) async {
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-    final snapshot = await userRef.get();
-
-    if (snapshot.exists) {
-      final data = snapshot.data() as Map<String, dynamic>;
-      final name = data['name'];
-      return name;
-    } else {
-      return '';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: getUserName(widget.userId),
-      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(snapshot.data ?? 'No name'),
-            ),
-            body: Center(
-              child: Text('Hello ${snapshot.data}'),
-            ),
-            floatingActionButton: FloatingActionButton.extended(
-              heroTag: "btn2",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WeeklyRecapPage(userId: widget.userId),
-                  ),
-                );
-              },
-              backgroundColor: Colors.deepPurple,
-              icon: Icon(Icons.add, color: Colors.white),
-              label: Text('Weekly Recap'),
-            ),
-            bottomNavigationBar: BottomNavigationBar(
-              items: const <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.task),
-                  label: 'Goals',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.leaderboard),
-                  label: 'Leaderboard',
-                ),
-              ],
-              currentIndex: 0,
-              selectedItemColor: Colors.deepPurple,
-              onTap: (int index) {
-                switch (index) {
-                  case 1:
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => GoalPage(userId: widget.userId)),
-                    );
-                    break;
-                  case 2:
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LeaderboardPage(userId: widget.userId)),
-                    );
-                    break;
-                }
-              },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Ascent'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Center(
+        child: Text('Hello ${UserPage.userId}'),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: "btn2",
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WeeklyRecapPage(),
             ),
           );
-        }
-      },
+        },
+        backgroundColor: Colors.deepPurple,
+        icon: Icon(Icons.add, color: Colors.white),
+        label: Text('Weekly Recap'),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.task),
+            label: 'Goals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard),
+            label: 'Leaderboard',
+          ),
+        ],
+        currentIndex: 0,
+        selectedItemColor: Colors.deepPurple,
+        onTap: (int index) {
+          switch (index) {
+            case 1:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GoalPage()),
+              );
+              break;
+            case 2:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LeaderboardPage()),
+              );
+              break;
+          }
+        },
+      ),
     );
   }
 }
 
 class UserPage extends StatefulWidget {
+  static String userId = '';
+
+  static void setUserId(String id) {
+    userId = id;
+  }
+
   @override
   _UserPage createState() => _UserPage();
 }
@@ -144,12 +126,14 @@ class _UserPage extends State<UserPage> {
     super.dispose();
   }
 
-  Future<String> addUser(String name) async {
-    if (name.isNotEmpty) {
-      final docRef = await db.collection('users').add({'name': name, 'points': 0, 'completed': 0});
-      return docRef.id;
-    } else {
-      return '';
+  void addUser(String id) async {
+    if (id.isNotEmpty) {
+      UserPage.setUserId(id);
+      final userRef = FirebaseFirestore.instance.collection('users').doc(id);
+      final snapshot = await userRef.get();
+      if (!snapshot.exists) {
+        await userRef.set({'points': 0, 'completed': 0});
+      }
     }
   }
 
@@ -169,24 +153,23 @@ class _UserPage extends State<UserPage> {
               TextField(
                 controller: userController,
                 decoration: InputDecoration(
-                  labelText: 'Enter your name',
+                  labelText: 'Enter your username',
                 ),
               ),
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  final name = userController.text;
-                  addUser(name).then((userId) {
-                    userController.clear();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MyHomePage(userId: userId),
-                      ),
-                    );
-                  });
-                },
-                child: Text('Create User'),
+                  final id = userController.text;
+                  addUser(id);
+                  userController.clear();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyHomePage(),
+                        ),
+                      );
+                  },
+                child: Text('Log in'),
               ),
             ],
           ),

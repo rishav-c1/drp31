@@ -6,9 +6,8 @@ import 'leaderboard.dart';
 import 'main.dart';
 
 class GoalPage extends StatefulWidget {
-  final String userId;
 
-  const GoalPage({required this.userId});
+  const GoalPage({Key ? key}) : super(key:key);
 
   @override
   State<GoalPage> createState() => _GoalPageState();
@@ -30,7 +29,7 @@ class _GoalPageState extends State<GoalPage> {
   }
 
   void loadUserPoints() async {
-    userPoints = await getUserPoints(widget.userId);
+    userPoints = await getUserPoints(UserPage.userId);
   }
 
   Future<int> getUserPoints(String userId) async {
@@ -92,7 +91,7 @@ class _GoalPageState extends State<GoalPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AddGoalPage(userId: widget.userId)),
+                  MaterialPageRoute(builder: (context) => AddGoalPage()),
                 );
               },
               backgroundColor: Colors.deepPurple,
@@ -103,7 +102,7 @@ class _GoalPageState extends State<GoalPage> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: db
                     .collection('tasks')
-                    .where('userId', isEqualTo: widget.userId) // add this line
+                    .where('userId', isEqualTo: UserPage.userId) // add this line
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
@@ -164,12 +163,12 @@ class _GoalPageState extends State<GoalPage> {
           switch (index) {
             case 0:
               Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => MyHomePage(userId: widget.userId)));
+                  builder: (context) => MyHomePage()));
               break;
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LeaderboardPage(userId: widget.userId)),
+                MaterialPageRoute(builder: (context) => LeaderboardPage()),
               );
               break;
           }
