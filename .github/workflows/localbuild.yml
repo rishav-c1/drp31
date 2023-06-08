@@ -31,8 +31,8 @@ jobs:
       - name: Test
         run: flutter pub get
       
-      - name: Build IPA
-        run: flutter build ipa
+#      - name: Build IPA
+#        run: flutter build ipa
 
       - name: Build APK
         run: flutter build apk --debug --split-per-abi
