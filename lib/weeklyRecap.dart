@@ -73,7 +73,7 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> {
             ),
             const SizedBox(height: 32),
             FutureBuilder<int>(
-              future: getUserCompleted(widget.userId),
+              future: getUserCompleted(UserPage.userId),
               builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
@@ -83,7 +83,7 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> {
                   } else {
                     final completedGoals = snapshot.data;
                     return FutureBuilder<int>(
-                      future: getUserPoints(widget.userId),
+                      future: getUserPoints(UserPage.userId),
                       builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const CircularProgressIndicator();
