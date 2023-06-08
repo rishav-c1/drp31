@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddGoalPage extends StatefulWidget {
-  const AddGoalPage({Key? key}) : super(key: key);
+  final userId;
+  const AddGoalPage({required this.userId});
 
   @override
   State<AddGoalPage> createState() => _AddGoalPageState();
@@ -23,7 +24,7 @@ class _AddGoalPageState extends State<AddGoalPage> {
     String goal = goalController.text;
     String points = pointController.text;
     if (goal.isNotEmpty) {
-      await db.collection('tasks').add({'task': goal, 'achieved': false, 'points': int.parse(points)});
+      await db.collection('tasks').add({'task': goal, 'achieved': false, 'points': int.parse(points), 'userId': widget.userId});
       goalController.clear();
       pointController.clear();
       Navigator.pop(context); // Go back to the previous page after adding the goal
@@ -58,9 +59,9 @@ class _AddGoalPageState extends State<AddGoalPage> {
               ),
               const SizedBox(height: 16.0),
               ElevatedButton(
-                onPressed: addGoal,
-                child: const Text('Add'),
-                style: ElevatedButton.styleFrom(primary: Colors.deepPurple)
+                  onPressed: addGoal,
+                  child: const Text('Add'),
+                  style: ElevatedButton.styleFrom(primary: Colors.deepPurple)
               ),
             ],
           ),
