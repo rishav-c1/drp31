@@ -25,22 +25,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ascent',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: UserPage());
+        title: 'Ascent',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: UserPage());
   }
 }
-
-// class MyHomePage extends StatefulWidget {
-//   const MyHomePage({Key? key, required this.title}) : super(key: key);
-//
-//   final String title;
-//
-//   @override
-//   State<MyHomePage> createState() => _MyHomePageState();
-// }
 
 class MyHomePage extends StatefulWidget {
   final String userId;
@@ -68,64 +59,76 @@ class _MyHomePage extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(getUserName(widget.userId) as String),
-      ),
-      body: Center(
-        child: Text('Hello XXX'),
-      ),
-    floatingActionButton: FloatingActionButton.extended(
-      heroTag: "btn2",
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WeeklyRecapPage(userId: widget.userId),
-          ),
-      );
-    },
-    backgroundColor: Colors.deepPurple,
-    icon: Icon(Icons.add, color: Colors.white),
-    label: Text('Weekly Recap'),
-  ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.task),
-            label: 'Goals',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard),
-            label: 'Leaderboard',
-          ),
-        ],
-        currentIndex: 0,
-        selectedItemColor: Colors.deepPurple,
-        onTap: (int index) {
-          switch (index) {
-            case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => GoalPage(userId: widget.userId)),
-              );
-              break;
-            case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LeaderboardPage(userId: widget.userId)),
-              );
-              break;
-          }
-        },
-      ),
+    return FutureBuilder<String>(
+      future: getUserName(widget.userId),
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(snapshot.data ?? 'No name'),
+            ),
+            body: Center(
+              child: Text('Hello ${snapshot.data}'),
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              heroTag: "btn2",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WeeklyRecapPage(userId: widget.userId),
+                  ),
+                );
+              },
+              backgroundColor: Colors.deepPurple,
+              icon: Icon(Icons.add, color: Colors.white),
+              label: Text('Weekly Recap'),
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.task),
+                  label: 'Goals',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.leaderboard),
+                  label: 'Leaderboard',
+                ),
+              ],
+              currentIndex: 0,
+              selectedItemColor: Colors.deepPurple,
+              onTap: (int index) {
+                switch (index) {
+                  case 1:
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => GoalPage(userId: widget.userId)),
+                    );
+                    break;
+                  case 2:
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LeaderboardPage(userId: widget.userId)),
+                    );
+                    break;
+                }
+              },
+            ),
+          );
+        }
+      },
     );
   }
 }
+
 class UserPage extends StatefulWidget {
   @override
   _UserPage createState() => _UserPage();
@@ -173,20 +176,21 @@ class _UserPage extends State<UserPage> {
               ElevatedButton(
                 onPressed: () {
                   final name = userController.text;
-                  final userId = addUser(name).toString();
-                  userController.clear();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MyHomePage(userId: userId),
-                    ),
-                  );
+                  addUser(name).then((userId) {
+                    userController.clear();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MyHomePage(userId: userId),
+                      ),
+                    );
+                  });
                 },
                 child: Text('Create User'),
               ),
             ],
+          ),
         ),
-      ),
       ),
     );
   }
