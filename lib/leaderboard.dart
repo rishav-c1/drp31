@@ -1,5 +1,5 @@
+import 'package:drp31/main.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class User {
   final String name;
@@ -18,6 +18,7 @@ class LeaderboardPage extends StatefulWidget {
 }
 
 class _LeaderboardPage extends State<LeaderboardPage> {
+  int selectedIndex = 0;
   final List<User> users = [
     User(name: 'User 1', points: 150),
     User(name: 'User 2', points: 200),
@@ -28,6 +29,9 @@ class _LeaderboardPage extends State<LeaderboardPage> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void onItemTapped(int index) {
   }
 
   @override
@@ -50,7 +54,33 @@ class _LeaderboardPage extends State<LeaderboardPage> {
           );
         },
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.task),
+            label: 'Goals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard),
+            label: 'Leaderboard',
+          ),
+        ],
+        iconSize: 40,
+        currentIndex: 1,
+        selectedItemColor: Colors.deepPurple,
+        onTap: (int index) {
+          switch (index) {
+            case 0:
+              Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => MyHomePage(title: 'Ascent')));
+                  break;
+            case 1:
+              Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                  LeaderboardPage(totalPoints: widget.totalPoints)));
+          }
+          //onItemTapped;
+        }
+    ),
     );
   }
-
 }

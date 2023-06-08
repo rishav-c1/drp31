@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'addGoal.dart';
+import 'leaderboard.dart';
 import 'weeklyRecap.dart';
 import 'firebase_options.dart';
 
@@ -45,10 +46,17 @@ class _MyHomePageState extends State<MyHomePage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   int totalPoints = 0;
   int goalsCompleted = 0;
+  int selectedIndex = 0;
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void onItemTapped(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
   }
 
   void toggleAchieved(String taskId, bool currentStatus, int points) async {
@@ -147,6 +155,34 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.task),
+            label: 'Goals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard),
+            label: 'Leaderboard',
+          ),
+        ],
+        iconSize: 40,
+        currentIndex: 0,
+        selectedItemColor: Colors.deepPurple,
+    onTap: (int index) {
+      switch (index) {
+        case 0:
+          Navigator.push(context, MaterialPageRoute(
+              builder: (context) => MyHomePage(title: 'Ascent')));
+          break;
+        case 1:
+          Navigator.push(context, MaterialPageRoute(builder: (context) =>
+              LeaderboardPage(totalPoints: totalPoints)));
+          break;
+      }
+      //onItemTapped;
+    }
       ),
     );
   }
