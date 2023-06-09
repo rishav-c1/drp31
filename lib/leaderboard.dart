@@ -50,7 +50,7 @@ class _LeaderboardPage extends State<LeaderboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Leaderboard'),
+        title: const Text('Leaderboard'),
         backgroundColor: Colors.deepPurple,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -60,14 +60,14 @@ class _LeaderboardPage extends State<LeaderboardPage> {
             return Text('Error: ${snapshot.error}');
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
           final users = snapshot.data!.docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
-            final name = data['name'] as String;
-            final points = data['points'] as int;
+            final name = doc.id;
+            final points = data['points'] as int? ?? 0; // if points is null, use 0 as default
             return User(name: name, points: points);
-          }).toList();
+          }).toSet().toList();
           users.sort((a, b) => b.points.compareTo(a.points));
           return ListView.builder(
             itemCount: users.length,
