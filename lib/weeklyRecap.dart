@@ -1,4 +1,3 @@
-import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -12,15 +11,15 @@ class WeeklyRecapPage extends StatefulWidget {
   State<WeeklyRecapPage> createState() => _WeeklyRecapPage();
 }
 
-class _WeeklyRecapPage extends State<WeeklyRecapPage> {
+class _WeeklyRecapPage extends State<WeeklyRecapPage> with SingleTickerProviderStateMixin {
   FirebaseFirestore db = FirebaseFirestore.instance;
-  late ConfettiController controller;
+  late AnimationController controller;
 
   @override
   void initState() {
     super.initState();
-    controller = ConfettiController(duration: Duration(seconds: 10));
-    controller.play();
+    controller = AnimationController(vsync: this, duration: Duration(seconds: 2));
+    controller.repeat(reverse: true);
   }
 
   @override
@@ -56,69 +55,76 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Congratulations!'),
+        title: const Text('Congratulations!', style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white)),
         backgroundColor: Colors.deepPurple,
+        elevation: 0,
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              "That's a wrap!",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 32),
-            FutureBuilder<int>(
-              future: getUserCompleted(UserPage.userId),
-              builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else {
-                  if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    final completedGoals = snapshot.data;
-                    return FutureBuilder<int>(
-                      future: getUserPoints(UserPage.userId),
-                      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else {
-                          if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          } else {
-                            final totalPoints = snapshot.data;
-                            return Text(
-                              'Congrats! This week you have achieved $completedGoals goals, for a total of $totalPoints points.',
-                              style: const TextStyle(fontSize: 18),
-                            );
-                          }
-                        }
-                      },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text(
+                "That's a wrap!",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Roboto', color: Colors.deepPurple),
+              ),
+              const SizedBox(height: 32),
+              FutureBuilder<int>(
+                future: getUserCompleted(UserPage.userId),
+                builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.deepPurple,
+                      ),
                     );
+                  } else {
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}', style: TextStyle(fontSize: 18, fontFamily: 'Roboto', color: Colors.red));
+                    } else {
+                      final completedGoals = snapshot.data;
+                      return FutureBuilder<int>(
+                        future: getUserPoints(UserPage.userId),
+                        builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.deepPurple,
+                              ),
+                            );
+                          } else {
+                            if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}', style: TextStyle(fontSize: 18, fontFamily: 'Roboto', color: Colors.red));
+                            } else {
+                              final totalPoints = snapshot.data;
+                              return Text(
+                                'Congratulations! This week you have achieved $completedGoals goals, for a total of $totalPoints points.',
+                                style: TextStyle(fontSize: 18, fontFamily: 'Roboto', color: Colors.deepPurple[700]),
+                                textAlign: TextAlign.center,
+                              );
+                            }
+                          }
+                        },
+                      );
+                    }
                   }
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            const SizedBox(height: 32),
-            // ConfettiWidget(
-            //   confettiController: controller,
-            //   blastDirectionality: BlastDirectionality.explosive,
-            //   shouldLoop: true,
-            //   colors: const [
-            //     Colors.green,
-            //     Colors.blue,
-            //     Colors.orange,
-            //     Colors.purple,
-            //     Colors.yellow,
-            //   ],
-            // ),
-          ],
+                },
+              ),
+              const SizedBox(height: 32),
+              AnimatedIcon(
+                icon: AnimatedIcons.event_add,
+                progress: controller,
+                size: 100,
+                color: Colors.deepPurple,
+              ),
+            ],
+          ),
         ),
       ),
     );
