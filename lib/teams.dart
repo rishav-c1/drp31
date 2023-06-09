@@ -182,13 +182,18 @@ class _TeamsPageState extends State<TeamsPage> {
           final team = teams[index];
           return Card(
             margin: EdgeInsets.all(8.0),
-            child: ListTile(
-              onTap: () => viewTasks(team),
+            child: ExpansionTile(
               title: Text(
                 team.name,
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               subtitle: Text('${team.memberCount} members'),
+              children: team.users.map((user) => Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Chip(
+                  label: Text(user),
+                ),
+              )).toList(),
             ),
           );
         },
