@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:drp31/teams.dart';
 import 'package:drp31/weeklyRecap.dart';
 import 'package:flutter/material.dart';
 
@@ -81,6 +82,9 @@ class _MyHomePage extends State<MyHomePage> {
             icon: Icon(Icons.leaderboard),
             label: 'Leaderboard',
           ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.group),
+              label: 'Teams')
         ],
         currentIndex: 0,
         selectedItemColor: Colors.deepPurple,
@@ -96,6 +100,12 @@ class _MyHomePage extends State<MyHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => LeaderboardPage()),
+              );
+              break;
+            case 3:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TeamsPage()),
               );
               break;
           }
