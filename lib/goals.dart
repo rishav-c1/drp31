@@ -71,27 +71,32 @@ class _GoalPageState extends State<GoalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Goals'),
+        title: const Text(
+          'My Goals',
+          style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        elevation: 0,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Text(
-            //   "Today's Tasks 💪",
-            //   style: TextStyle(fontSize: 20)//, fontWeight: FontWeight),
-            // ),
-            const SizedBox(height: 32),
-            Text("$userPoints Points",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.green[500]),),
+            const SizedBox(height: 60),
+            Text(
+              "$userPoints AscentPoints ✨",
+              style: TextStyle(
+                  fontSize: 26,
+                  color: Colors.green[500],
+                  fontFamily: 'Roboto'),
+            ),
             const SizedBox(height: 32),
             FloatingActionButton(
               heroTag: "btn1",
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AddGoalPage()),
+                  MaterialPageRoute(builder: (context) => const AddGoalPage()),
                 );
               },
               backgroundColor: Colors.deepPurple,
@@ -100,13 +105,10 @@ class _GoalPageState extends State<GoalPage> {
             const SizedBox(height: 32),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
-                stream: db
-                    .collection('tasks')
-                    .where('userId', isEqualTo: UserPage.userId) // add this line
-                    .snapshots(),
+                stream: db.collection('tasks').where('userId', isEqualTo: UserPage.userId).snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const CircularProgressIndicator();
+                    return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
                   }
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
                   return ListView.builder(
@@ -116,18 +118,28 @@ class _GoalPageState extends State<GoalPage> {
                       final task = documents[index];
                       final taskId = task.id;
                       final data = task.data() as Map<String, dynamic>;
-                      final isAchieved = data?['achieved'] ?? false;
-                      final points = data?['points'] ?? 0;
+                      final isAchieved = data['achieved'] ?? false;
+                      final points = data['points'] ?? 0;
                       final userId = data['userId'];
                       return Card(
-                        color: isAchieved ? Colors.green[100] : null,
+                        color: isAchieved ? Colors.green[100] : Colors.white,
                         child: ListTile(
-                          title: Text(data?['task'] ?? 'Default task'),
+                          title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 18)),
                           trailing: TextButton(
                             onPressed: () => toggleAchieved(taskId, userId, isAchieved, points),
-                            child: Text(
-                              isAchieved ? 'Achieved  +${points}pts' : 'Mark Achieved',
-                              style: TextStyle(color: isAchieved ? Colors.green : Colors.black),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Icon(
+                                  isAchieved ? Icons.check_box : Icons.check_box_outline_blank,
+                                  color: isAchieved ? Colors.green : Colors.black,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '+$points points',
+                                  style: TextStyle(color: isAchieved ? Colors.green : Colors.black, fontFamily: 'Roboto', fontSize: 16),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -137,7 +149,6 @@ class _GoalPageState extends State<GoalPage> {
                 },
               ),
             ),
-
             const SizedBox(height: 32)
           ],
         ),
@@ -163,12 +174,12 @@ class _GoalPageState extends State<GoalPage> {
           switch (index) {
             case 0:
               Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => MyHomePage()));
+                  builder: (context) => const MyHomePage()));
               break;
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LeaderboardPage()),
+                MaterialPageRoute(builder: (context) => const LeaderboardPage()),
               );
               break;
           }

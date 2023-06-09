@@ -84,9 +84,9 @@ class _LeaderboardPage extends State<LeaderboardPage> {
             itemBuilder: (context, index) {
               final user = users[index];
               return ListTile(
-                leading: Text('${index + 1}', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.deepPurple)),
-                title: Text(user.name, style: TextStyle(fontFamily: 'Roboto', fontSize: 18, fontWeight: FontWeight.bold)),
-                subtitle: Text('${user.points} points', style: TextStyle(fontFamily: 'Roboto', fontSize: 16, color: Colors.grey)),
+                leading: Text('${index + 1}', style: const TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.deepPurple)),
+                title: Text(user.name, style: const TextStyle(fontFamily: 'Roboto', fontSize: 18, fontWeight: FontWeight.bold)),
+                subtitle: Text('${user.points} points', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16, color: Colors.grey)),
                 tileColor: user.name == UserPage.userId? Colors.deepPurple[50] : Colors.white,
               );
             },
