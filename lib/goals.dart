@@ -130,14 +130,14 @@ class _GoalPageState extends State<GoalPage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
+                                const SizedBox(width: 10),
+                                Text(
+                                  '+$points points  ',
+                                  style: TextStyle(color: isAchieved ? Colors.green : Colors.black, fontFamily: 'Roboto', fontSize: 16),
+                                ),
                                 Icon(
                                   isAchieved ? Icons.check_box : Icons.check_box_outline_blank,
                                   color: isAchieved ? Colors.green : Colors.black,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '+$points points',
-                                  style: TextStyle(color: isAchieved ? Colors.green : Colors.black, fontFamily: 'Roboto', fontSize: 16),
                                 ),
                               ],
                             ),

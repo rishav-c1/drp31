@@ -44,8 +44,9 @@ class _AddGoalPageState extends State<AddGoalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Goal'),
+        title: const Text('Add Goal', style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white)),
         backgroundColor: Colors.deepPurple,
+        elevation: 0,
       ),
       body: Center(
         child: Padding(
@@ -58,14 +59,18 @@ class _AddGoalPageState extends State<AddGoalPage> {
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter a goal',
+                  hintStyle: TextStyle(fontFamily: 'Roboto'),
                 ),
               ),
+              const SizedBox(height: 10.0),
               TextField(
                 controller: pointController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter points',
+                  hintStyle: TextStyle(fontFamily: 'Roboto'),
                 ),
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16.0),
               Container(
@@ -75,7 +80,7 @@ class _AddGoalPageState extends State<AddGoalPage> {
                   borderRadius: BorderRadius.circular(30.0),
                   border: Border.all(
                     color: Colors.transparent,
-                    width: 1.5, // Updated border width
+                    width: 1.5,
                   ),
                 ),
                 child: Row(
@@ -90,18 +95,18 @@ class _AddGoalPageState extends State<AddGoalPage> {
                         child: Container(
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
+                            borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(28.0),
                               bottomLeft: Radius.circular(28.0),
                             ),
-                            color: selectedIndex == 0 ? Colors.purple : Colors.grey,
+                            color: selectedIndex == 0 ? Colors.deepPurple : Colors.grey,
                           ),
                           child: Text(
                             'Work',
                             style: TextStyle(
+                              fontFamily: 'Roboto',
                               color: selectedIndex == 0 ? Colors.white : Colors.black,
                               fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -117,18 +122,18 @@ class _AddGoalPageState extends State<AddGoalPage> {
                         child: Container(
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
+                            borderRadius: const BorderRadius.only(
                               topRight: Radius.circular(28.0),
                               bottomRight: Radius.circular(28.0),
                             ),
-                            color: selectedIndex == 1 ? Colors.blueAccent : Colors.grey,
+                            color: selectedIndex == 1 ? Colors.deepPurple : Colors.grey,
                           ),
                           child: Text(
                             'Life',
                             style: TextStyle(
+                              fontFamily: 'Roboto',
                               color: selectedIndex == 1 ? Colors.white : Colors.black,
                               fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -140,8 +145,14 @@ class _AddGoalPageState extends State<AddGoalPage> {
               const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: addGoal,
-                child: const Text('Add'),
-                style: ElevatedButton.styleFrom(primary: Colors.deepPurple),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.deepPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: Text('Add', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.white)),
               ),
             ],
           ),
