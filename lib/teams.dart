@@ -9,11 +9,19 @@ class Team {
   final String name;
   final List<String> users;
   final int memberCount;
+  final List<String> tasks; // Added tasks field
 
   Team({
     required this.name,
     required this.users,
+    required this.tasks, // Added tasks field
   }) : memberCount = users.length;
+}
+
+class Task {
+  final String name;
+
+  Task({required this.name});
 }
 
 class TeamsPage extends StatefulWidget {
@@ -26,7 +34,7 @@ class TeamsPage extends StatefulWidget {
 class _TeamsPageState extends State<TeamsPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   List<Team> teams = [];
-//
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +48,8 @@ class _TeamsPageState extends State<TeamsPage> {
         final data = doc.data();
         final name = data['name'] as String;
         final users = List<String>.from(data['users']);
-        return Team(name: name, users: users);
+        final tasks = List<String>.from(data['tasks']); // Added tasks field
+        return Team(name: name, users: users, tasks: tasks); // Added tasks field
       }).toList();
     });
   }
@@ -54,8 +63,7 @@ class _TeamsPageState extends State<TeamsPage> {
 
     if (teamSnapshot.exists) {
       // Team exists, add the user to the team's list of users
-      print("\n--------- HI ---------\n");
-      
+
       await teamRef.update({
         'users': FieldValue.arrayUnion([UserPage.userId])
       });
@@ -63,7 +71,8 @@ class _TeamsPageState extends State<TeamsPage> {
       // Team doesn't exist, create a new team with the user
       await teamRef.set({
         'name': teamName,
-        'users': [UserPage.userId]
+        'users': [UserPage.userId],
+        'tasks': [], // Initialize tasks as an empty array
       });
     }
 
@@ -120,6 +129,41 @@ class _TeamsPageState extends State<TeamsPage> {
     );
   }
 
+  void viewTasks(Team team) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Tasks for ${team.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (team.tasks.isEmpty)
+                Text('No tasks available')
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: team.tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = team.tasks[index];
+                    return ListTile(
+                      title: Text(task),
+                    );
+                  },
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,9 +175,20 @@ class _TeamsPageState extends State<TeamsPage> {
         itemCount: teams.length,
         itemBuilder: (context, index) {
           final team = teams[index];
-          return ListTile(
-            title: Text(team.name),
-            trailing: Text('${team.memberCount} members'),
+          return GestureDetector(
+            onTap: () => viewTasks(team),
+            child: Container(
+              margin: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: ListTile(
+                title: Text(team.name),
+                trailing: Text('${team.memberCount} members'),
+              ),
+            ),
           );
         },
       ),
