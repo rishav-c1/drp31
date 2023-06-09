@@ -1,8 +1,8 @@
 import 'package:drp31/main.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'goals.dart';
+import 'teams.dart';
 
 class User {
   final String name;
@@ -94,6 +94,7 @@ class _LeaderboardPage extends State<LeaderboardPage> {
         },
       ),
     bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -107,6 +108,10 @@ class _LeaderboardPage extends State<LeaderboardPage> {
             icon: Icon(Icons.leaderboard),
             label: 'Leaderboard',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Teams',
+          ),
         ],
         currentIndex: 2,
         selectedItemColor: Colors.deepPurple,
@@ -119,6 +124,13 @@ class _LeaderboardPage extends State<LeaderboardPage> {
             case 1:
               Navigator.push(context, MaterialPageRoute(builder: (context) =>
                   const GoalPage()));
+              break;
+            case 3:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TeamsPage()),
+              );
+              break;
           }
           //onItemTapped;
         }

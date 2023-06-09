@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'goals.dart';
 import 'leaderboard.dart';
 import 'weeklyRecap.dart';
+import 'teams.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -93,6 +94,7 @@ class _MyHomePage extends State<MyHomePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -106,10 +108,13 @@ class _MyHomePage extends State<MyHomePage> {
             icon: Icon(Icons.leaderboard),
             label: 'Leaderboard',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Teams',
+          ),
         ],
         currentIndex: 0,
         selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey.shade400,
         backgroundColor: Colors.deepPurple,
         onTap: (int index) {
           switch (index) {
@@ -123,6 +128,12 @@ class _MyHomePage extends State<MyHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const LeaderboardPage()),
+              );
+              break;
+            case 3:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TeamsPage()),
               );
               break;
           }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'addGoal.dart';
 import 'leaderboard.dart';
 import 'main.dart';
+import 'teams.dart';
 
 class GoalPage extends StatefulWidget {
 
@@ -154,6 +155,7 @@ class _GoalPageState extends State<GoalPage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -166,6 +168,10 @@ class _GoalPageState extends State<GoalPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.leaderboard),
             label: 'Leaderboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Teams',
           ),
         ],
         currentIndex: 1,
@@ -180,6 +186,12 @@ class _GoalPageState extends State<GoalPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const LeaderboardPage()),
+              );
+              break;
+            case 3:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TeamsPage()),
               );
               break;
           }
