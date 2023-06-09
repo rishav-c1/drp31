@@ -128,6 +128,9 @@ class _TeamsPage extends State<TeamsPage> {
         ],
         currentIndex: 3,
         selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.grey,
+        selectedLabelStyle: TextStyle(color: Colors.deepPurple),
+        unselectedLabelStyle: TextStyle(color: Colors.grey),
         onTap: (int index) {
           switch (index) {
             case 0:

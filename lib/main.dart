@@ -84,7 +84,7 @@ class _MyHomePage extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
               icon: Icon(Icons.group),
-              label: 'Teams')
+              label: 'Teams'),
         ],
         currentIndex: 0,
         selectedItemColor: Colors.deepPurple,
