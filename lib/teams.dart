@@ -92,20 +92,20 @@ class _TeamsPageState extends State<TeamsPage> {
         String teamName = '';
 
         return AlertDialog(
-          title: Text('Add Team with Users'),
+          title: const Text('Add Team with Users'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 onChanged: (value) => teamName = value,
-                decoration: InputDecoration(labelText: 'Team Name'),
+                decoration: const InputDecoration(labelText: 'Team Name'),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
@@ -119,14 +119,14 @@ class _TeamsPageState extends State<TeamsPage> {
                   fetchTeams();
 
                   // Show a success message
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Team added successfully'),
                   ));
 
                   Navigator.pop(context);
                 }
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );
@@ -144,7 +144,7 @@ class _TeamsPageState extends State<TeamsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (team.tasks.isEmpty)
-                Text('No tasks available')
+                const Text('No tasks available')
               else
                 ListView.builder(
                   shrinkWrap: true,
@@ -161,7 +161,7 @@ class _TeamsPageState extends State<TeamsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Close'),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -173,7 +173,7 @@ class _TeamsPageState extends State<TeamsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Teams'),
+        title: const Text('Teams'),
         backgroundColor: Colors.deepPurple,
       ),
       body: ListView.builder(
@@ -181,11 +181,11 @@ class _TeamsPageState extends State<TeamsPage> {
         itemBuilder: (context, index) {
           final team = teams[index];
           return Card(
-            margin: EdgeInsets.all(8.0),
+            margin: const EdgeInsets.all(8.0),
             child: ExpansionTile(
               title: Text(
                 team.name,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               subtitle: Text('${team.memberCount} members'),
               children: team.users.map((user) => Padding(
@@ -200,8 +200,8 @@ class _TeamsPageState extends State<TeamsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: addTeamWithUsers,
-        child: Icon(Icons.add),
         backgroundColor: Colors.deepPurple,
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
