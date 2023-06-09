@@ -1,7 +1,4 @@
-import 'dart:ffi';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drp31/weeklyRecap.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -34,38 +31,67 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-
-  const MyHomePage({Key ? key}) : super(key:key);
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePage();
 }
 
 class _MyHomePage extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ascent'),
+        title: const Text(
+          'Ascent',
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: Colors.deepPurple,
+        elevation: 0, // flat design
       ),
       body: Center(
-        child: Text('Hello ${UserPage.userId}'),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: "btn2",
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => WeeklyRecapPage(),
-            ),
-          );
-        },
-        backgroundColor: Colors.deepPurple,
-        icon: Icon(Icons.add, color: Colors.white),
-        label: Text('Weekly Recap'),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const CircleAvatar(
+                backgroundColor: Colors.deepPurple,
+                radius: 60,
+                child: Icon(
+                  Icons.person,
+                  size: 60,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              Text(
+                'Welcome back ${UserPage.userId}!',
+                style: const TextStyle(
+                  fontSize: 30,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              const Text(
+                'Here\'s what you\'ve missed...',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontFamily: 'Roboto',
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -83,7 +109,9 @@ class _MyHomePage extends State<MyHomePage> {
           ),
         ],
         currentIndex: 0,
-        selectedItemColor: Colors.deepPurple,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.grey.shade400,
+        backgroundColor: Colors.deepPurple,
         onTap: (int index) {
           switch (index) {
             case 1:
@@ -100,6 +128,19 @@ class _MyHomePage extends State<MyHomePage> {
               break;
           }
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WeeklyRecapPage(),
+            ),
+          );
+        },
+        label: const Text('Weekly Recap'),
+        icon: const Icon(Icons.book),
+        backgroundColor: Colors.deepPurple,
       ),
     );
   }
@@ -141,7 +182,7 @@ class _UserPage extends State<UserPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ascent'),
+        title: const Text('Ascent'),
         backgroundColor: Colors.deepPurple,
       ),
       body: Center(
@@ -154,6 +195,11 @@ class _UserPage extends State<UserPage> {
                 controller: userController,
                 decoration: InputDecoration(
                   labelText: 'Enter your username',
+                  filled: true,
+                  fillColor: Colors.grey.shade200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
                 ),
               ),
               SizedBox(height: 16),
@@ -162,14 +208,26 @@ class _UserPage extends State<UserPage> {
                   final id = userController.text;
                   addUser(id);
                   userController.clear();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MyHomePage(),
-                        ),
-                      );
-                  },
-                child: Text('Log in'),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MyHomePage(),
+                    ),
+                  );
+                },
+                child: const Text('Log in'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WeeklyRecapPage(),
+                    ),
+                  );
+                },
+                child: const Text('Weekly Recap'),
               ),
             ],
           ),
