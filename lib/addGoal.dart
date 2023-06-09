@@ -146,13 +146,13 @@ class _AddGoalPageState extends State<AddGoalPage> {
               ElevatedButton(
                 onPressed: addGoal,
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.deepPurple,
+                  backgroundColor: Colors.deepPurple,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),
-                child: Text('Add', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.white)),
+                child: const Text('Add', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.white)),
               ),
             ],
           ),

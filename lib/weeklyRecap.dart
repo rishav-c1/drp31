@@ -18,7 +18,7 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> with SingleTickerProviderS
   @override
   void initState() {
     super.initState();
-    controller = AnimationController(vsync: this, duration: Duration(seconds: 2));
+    controller = AnimationController(vsync: this, duration: const Duration(seconds: 2));
     controller.repeat(reverse: true);
   }
 
@@ -86,7 +86,7 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> with SingleTickerProviderS
                     );
                   } else {
                     if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}', style: TextStyle(fontSize: 18, fontFamily: 'Roboto', color: Colors.red));
+                      return Text('Error: ${snapshot.error}', style: const TextStyle(fontSize: 18, fontFamily: 'Roboto', color: Colors.red));
                     } else {
                       final completedGoals = snapshot.data;
                       return FutureBuilder<int>(
@@ -100,7 +100,7 @@ class _WeeklyRecapPage extends State<WeeklyRecapPage> with SingleTickerProviderS
                             );
                           } else {
                             if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}', style: TextStyle(fontSize: 18, fontFamily: 'Roboto', color: Colors.red));
+                              return Text('Error: ${snapshot.error}', style: const TextStyle(fontSize: 18, fontFamily: 'Roboto', color: Colors.red));
                             } else {
                               final totalPoints = snapshot.data;
                               return Text(

@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'addGoal.dart';
 import 'goals.dart';
 import 'leaderboard.dart';
 import 'weeklyRecap.dart';
@@ -117,13 +116,13 @@ class _MyHomePage extends State<MyHomePage> {
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => GoalPage()),
+                MaterialPageRoute(builder: (context) => const GoalPage()),
               );
               break;
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LeaderboardPage()),
+                MaterialPageRoute(builder: (context) => const LeaderboardPage()),
               );
               break;
           }
@@ -134,7 +133,7 @@ class _MyHomePage extends State<MyHomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WeeklyRecapPage(),
+              builder: (context) => const WeeklyRecapPage(),
             ),
           );
         },
@@ -202,7 +201,7 @@ class _UserPage extends State<UserPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
                   final id = userController.text;
