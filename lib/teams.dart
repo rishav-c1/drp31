@@ -9,14 +9,16 @@ class Team {
   final String name;
   final List<String> users;
   final int memberCount;
-  final List<String> tasks; // Added tasks field
+  List<Task> tasks; // Update tasks field to hold Task objects
 
   Team({
     required this.name,
     required this.users,
-    required this.tasks, // Added tasks field
+    required this.tasks,
   }) : memberCount = users.length;
 }
+
+
 
 class Task {
   final String name;
@@ -42,17 +44,34 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
   void fetchTeams() async {
-    final teamSnapshot = await db.collection('teams').get();
+    final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
     setState(() {
       teams = teamSnapshot.docs.map((doc) {
         final data = doc.data();
         final name = data['name'] as String;
         final users = List<String>.from(data['users']);
-        final tasks = List<String>.from(data['tasks']); // Added tasks field
-        return Team(name: name, users: users, tasks: tasks); // Added tasks field
+        return Team(
+          name: name,
+          users: users,
+          tasks: [], // Initialize tasks as an empty list
+        );
       }).toList();
     });
+
+    // Fetch tasks for each team
+    for (final team in teams) {
+      final tasksSnapshot = await db.collection('tasks').where('userId', whereIn: team.users).get();
+      setState(() {
+        team.tasks = tasksSnapshot.docs.map((doc) {
+          final data = doc.data();
+          final name = data['userId'] as String;
+          return Task(name: name);
+        }).toList();
+      });
+    }
   }
+
+
 
   void joinTeam(String teamName) async {
     String teamId = teamName.replaceAll(' ', '').toLowerCase();
@@ -141,16 +160,31 @@ class _TeamsPageState extends State<TeamsPage> {
               if (team.tasks.isEmpty)
                 Text('No tasks available')
               else
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: team.tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = team.tasks[index];
-                    return ListTile(
-                      title: Text(task),
-                    );
-                  },
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: teams.length,
+                    itemBuilder: (context, index) {
+                      final team = teams[index];
+                      return GestureDetector(
+                        onTap: () => viewTasks(team),
+                        child: Container(
+                          margin: EdgeInsets.all(8.0),
+                          padding: EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: ListTile(
+                            title: Text(team.name),
+                            trailing: Text('${team.memberCount} members'),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
+
             ],
           ),
           actions: [
@@ -163,6 +197,7 @@ class _TeamsPageState extends State<TeamsPage> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
