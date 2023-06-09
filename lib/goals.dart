@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:drp31/teams.dart';
 import 'package:flutter/material.dart';
 
 import 'addGoal.dart';
@@ -143,6 +144,7 @@ class _GoalPageState extends State<GoalPage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -155,6 +157,10 @@ class _GoalPageState extends State<GoalPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.leaderboard),
             label: 'Leaderboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Teams',
           ),
         ],
         currentIndex: 1,
@@ -170,6 +176,10 @@ class _GoalPageState extends State<GoalPage> {
                 context,
                 MaterialPageRoute(builder: (context) => LeaderboardPage()),
               );
+              break;
+            case 3:
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => TeamsPage()));
               break;
           }
         },

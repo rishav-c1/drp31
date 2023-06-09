@@ -197,6 +197,7 @@ class _TeamsPageState extends State<TeamsPage> {
         child: Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -230,10 +231,6 @@ class _TeamsPageState extends State<TeamsPage> {
             case 2:
               Navigator.push(
                   context, MaterialPageRoute(builder: (context) => LeaderboardPage()));
-              break;
-            case 3:
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => TeamsPage()));
               break;
           }
         },

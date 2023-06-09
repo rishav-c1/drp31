@@ -69,6 +69,7 @@ class _MyHomePage extends State<MyHomePage> {
         label: Text('Weekly Recap'),
       ),
       bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -87,14 +88,13 @@ class _MyHomePage extends State<MyHomePage> {
             label: 'Teams',
           ),
         ],
-        currentIndex: 3,
+        currentIndex: 0,
         selectedItemColor: Colors.deepPurple,
+        // showUnselectedLabels: true,
+        // unselectedLabelStyle: const TextStyle(color: Colors.grey),
+        // selectedLabelStyle: const TextStyle(color: Colors.deepPurple),
         onTap: (int index) {
           switch (index) {
-            case 0:
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MyHomePage()));
-              break;
             case 1:
               Navigator.push(
                   context, MaterialPageRoute(builder: (context) => GoalPage()));
