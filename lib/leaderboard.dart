@@ -50,22 +50,32 @@ class _LeaderboardPage extends State<LeaderboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Leaderboard'),
+        title: const Text('Leaderboard', style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white)),
         backgroundColor: Colors.deepPurple,
+        elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: db.collection('users').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.red),
+              ),
+            );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.deepPurple,
+              ),
+            );
           }
           final users = snapshot.data!.docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
             final name = doc.id;
-            final points = data['points'] as int? ?? 0; // if points is null, use 0 as default
+            final points = data['points'] as int? ?? 0;
             return User(name: name, points: points);
           }).toSet().toList();
           users.sort((a, b) => b.points.compareTo(a.points));
@@ -74,15 +84,16 @@ class _LeaderboardPage extends State<LeaderboardPage> {
             itemBuilder: (context, index) {
               final user = users[index];
               return ListTile(
-                leading: Text('${index + 1}'), // Rank number
-                title: Text(user.name),
-                subtitle: Text('${user.points} points'),
+                leading: Text('${index + 1}', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.deepPurple)),
+                title: Text(user.name, style: TextStyle(fontFamily: 'Roboto', fontSize: 18, fontWeight: FontWeight.bold)),
+                subtitle: Text('${user.points} points', style: TextStyle(fontFamily: 'Roboto', fontSize: 16, color: Colors.grey)),
+                tileColor: user.name == UserPage.userId? Colors.deepPurple[50] : Colors.white,
               );
             },
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
+    bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -103,11 +114,11 @@ class _LeaderboardPage extends State<LeaderboardPage> {
           switch (index) {
             case 0:
               Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => MyHomePage()));
+                  builder: (context) => const MyHomePage()));
                   break;
             case 1:
               Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                  GoalPage()));
+                  const GoalPage()));
           }
           //onItemTapped;
         }
