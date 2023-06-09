@@ -124,7 +124,7 @@ class _GoalPageState extends State<GoalPage> {
                       return Card(
                         color: isAchieved ? Colors.green[100] : Colors.white,
                         child: ListTile(
-                          title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 18)),
+                          title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16)),
                           trailing: TextButton(
                             onPressed: () => toggleAchieved(taskId, userId, isAchieved, points),
                             child: Row(
@@ -133,11 +133,11 @@ class _GoalPageState extends State<GoalPage> {
                                 const SizedBox(width: 10),
                                 Text(
                                   '+$points points  ',
-                                  style: TextStyle(color: isAchieved ? Colors.green : Colors.black, fontFamily: 'Roboto', fontSize: 16),
+                                  style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
                                 ),
                                 Icon(
                                   isAchieved ? Icons.check_box : Icons.check_box_outline_blank,
-                                  color: isAchieved ? Colors.green : Colors.black,
+                                  color: isAchieved ? Colors.green : Colors.black54,
                                 ),
                               ],
                             ),
