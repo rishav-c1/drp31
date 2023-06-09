@@ -194,7 +194,7 @@ class _UserPage extends State<UserPage> {
               TextField(
                 controller: userController,
                 decoration: InputDecoration(
-                  labelText: 'Enter your username',
+                  labelText: 'Please enter your username',
                   filled: true,
                   fillColor: Colors.grey.shade200,
                   border: OutlineInputBorder(
@@ -215,19 +215,7 @@ class _UserPage extends State<UserPage> {
                     ),
                   );
                 },
-                child: const Text('Log in'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const WeeklyRecapPage(),
-                    ),
-                  );
-                },
-                child: const Text('Weekly Recap'),
+                child: const Text('Login'),
               ),
             ],
           ),
