@@ -45,8 +45,8 @@ class _TeamsPageState extends State<TeamsPage> {
     });
   }
 
-  void joinTeam(Team team) async {
-    String teamId = team.name.replaceAll(' ', '').toLowerCase();
+  void joinTeam(String teamName) async {
+    String teamId = teamName.replaceAll(' ', '').toLowerCase();
 
     // Check if the team exists in the database
     final teamRef = db.collection('teams').doc(teamId);
@@ -55,16 +55,14 @@ class _TeamsPageState extends State<TeamsPage> {
     if (teamSnapshot.exists) {
       // Team exists, add the user to the team's list of users
       print("\n--------- HI ---------\n");
-      var users = teamSnapshot.get('users');
-      users.add(UserPage.userId);
-
+      
       await teamRef.update({
-        'users': users
+        'users': FieldValue.arrayUnion([UserPage.userId])
       });
     } else {
       // Team doesn't exist, create a new team with the user
       await teamRef.set({
-        'name': team.name,
+        'name': teamName,
         'users': [UserPage.userId]
       });
     }
@@ -101,10 +99,7 @@ class _TeamsPageState extends State<TeamsPage> {
                   String teamId = teamName.replaceAll(' ', '').toLowerCase();
 
                   // Create a new team with the user
-                  await db.collection('teams').doc(teamId).set({
-                    'name': teamName,
-                    'users': [UserPage.userId]
-                  });
+                  joinTeam(teamName);
 
                   // Fetch the updated list of teams after adding
                   fetchTeams();
