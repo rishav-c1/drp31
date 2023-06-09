@@ -34,7 +34,7 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
   void fetchTeams() async {
-    final teamSnapshot = await db.collection('teams').get();
+    final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
     setState(() {
       teams = teamSnapshot.docs.map((doc) {
         final data = doc.data();
@@ -54,7 +54,6 @@ class _TeamsPageState extends State<TeamsPage> {
 
     if (teamSnapshot.exists) {
       // Team exists, add the user to the team's list of users
-      print("\n--------- HI ---------\n");
       
       await teamRef.update({
         'users': FieldValue.arrayUnion([UserPage.userId])
