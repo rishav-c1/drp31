@@ -94,7 +94,7 @@ class _AddGoalPageState extends State<AddGoalPage> {
                               topLeft: Radius.circular(28.0),
                               bottomLeft: Radius.circular(28.0),
                             ),
-                            color: selectedIndex == 0 ? Colors.red : Colors.grey,
+                            color: selectedIndex == 0 ? Colors.purple : Colors.grey,
                           ),
                           child: Text(
                             'Work',
@@ -121,7 +121,7 @@ class _AddGoalPageState extends State<AddGoalPage> {
                               topRight: Radius.circular(28.0),
                               bottomRight: Radius.circular(28.0),
                             ),
-                            color: selectedIndex == 1 ? Colors.green : Colors.grey,
+                            color: selectedIndex == 1 ? Colors.blueAccent : Colors.grey,
                           ),
                           child: Text(
                             'Life',
