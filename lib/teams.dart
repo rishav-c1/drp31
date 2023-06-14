@@ -41,6 +41,19 @@ class _TeamsPageState extends State<TeamsPage> {
     fetchTeams();
   }
 
+  Future<int> getUserPoints(String userId) async {
+    final userRef = db.collection('users').doc(userId);
+    final snapshot = await userRef.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final points = data['points'];
+      return points;
+    } else {
+      return 0;
+    }
+  }
+
   void fetchTeams() async {
     final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
     setState(() {
@@ -176,26 +189,85 @@ class _TeamsPageState extends State<TeamsPage> {
         title: const Text('Teams'),
         backgroundColor: Colors.deepPurple,
       ),
-      body: ListView.builder(
-        itemCount: teams.length,
-        itemBuilder: (context, index) {
-          final team = teams[index];
-          return Card(
-            margin: const EdgeInsets.all(8.0),
-            child: ExpansionTile(
-              title: Text(
-                team.name,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+      body: FutureBuilder<List<Team>>(
+        future: Future.wait(
+          teams.map((team) async {
+            final usersWithPoints = await Future.wait(
+              team.users.map((user) async {
+                final points = await getUserPoints(user);
+                return User(name: user, points: points);
+              }).toList(),
+            );
+
+            // Sort users in descending order of points
+            usersWithPoints.sort((a, b) => b.points.compareTo(a.points));
+
+            return Team(
+              name: team.name,
+              users: usersWithPoints.map((user) => user.name).toList(),
+              tasks: team.tasks,
+            );
+          }).toList(),
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.deepPurple,
               ),
-              subtitle: Text('${team.memberCount} members'),
-              children: team.users.map((user) => Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Chip(
-                  label: Text(user),
-                ),
-              )).toList(),
-            ),
-          );
+            );
+          } else {
+            if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              final sortedTeams = snapshot.data!;
+              return ListView.builder(
+                itemCount: sortedTeams.length,
+                itemBuilder: (context, index) {
+                  final team = sortedTeams[index];
+                  return Card(
+                    margin: const EdgeInsets.all(8.0),
+                    child: ExpansionTile(
+                      title: Text(
+                        team.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      subtitle: Text('${team.memberCount} members'),
+                      children: team.users.map((user) => FutureBuilder<int>(
+                        future: getUserPoints(user),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else {
+                            if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            } else {
+                              final userPoints = snapshot.data;
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Chip(
+                                      label: Text(user),
+                                    ),
+                                    Text(
+                                      'Points: $userPoints',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      )).toList(),
+                    ),
+                  );
+                },
+              );
+            }
+          }
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -229,15 +301,15 @@ class _TeamsPageState extends State<TeamsPage> {
           switch (index) {
             case 0:
               Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MyHomePage()));
+                  context, MaterialPageRoute(builder: (context) => const MyHomePage()));
               break;
             case 1:
               Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => GoalPage()));
+                  context, MaterialPageRoute(builder: (context) => const GoalPage()));
               break;
             case 2:
               Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => LeaderboardPage()));
+                  context, MaterialPageRoute(builder: (context) => const LeaderboardPage()));
               break;
           }
         },
