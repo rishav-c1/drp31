@@ -1,14 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:drp31/main.dart';
 import 'package:flutter/material.dart';
-
-import 'addGoal.dart';
-import 'leaderboard.dart';
-import 'main.dart';
-import 'teams.dart';
 
 class UserGoalPage extends StatefulWidget {
 
-  const UserGoalPage({Key ? key}) : super(key:key);
+  const UserGoalPage({super.key});
 
   @override
   State<UserGoalPage> createState() => _UserGoalPageState();
@@ -94,7 +90,7 @@ class _UserGoalPageState extends State<UserGoalPage> {
             const SizedBox(height: 32),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
-                stream: db.collection('tasks').where('userId', isEqualTo: 'Rosa').snapshots(),
+                stream: db.collection('tasks').where('userId', isEqualTo: UserPage.userId).snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));

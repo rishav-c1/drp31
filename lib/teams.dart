@@ -55,48 +55,60 @@ class _TeamsPageState extends State<TeamsPage> {
     }
   }
 
-  // void viewUserTasks(String userId) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Tasks for User $userId'),
-  //         content: Container(
-  //           height: 300, // Adjust this value as needed
-  //           child: SingleChildScrollView(
-  //             child: StreamBuilder<QuerySnapshot>(
-  //               stream: db.collection('tasks').where('userId', isEqualTo: userId).snapshots(),
-  //               builder: (context, snapshot) {
-  //                 if (!snapshot.hasData) {
-  //                   return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
-  //                 }
-  //                 final List<DocumentSnapshot> documents = snapshot.data!.docs;
-  //                 return ListView.builder(
-  //                   shrinkWrap: true,
-  //                   physics: const NeverScrollableScrollPhysics(),
-  //                   itemCount: documents.length,
-  //                   itemBuilder: (context, index) {
-  //                     final task = documents[index];
-  //                     final data = task.data() as Map<String, dynamic>;
-  //                     return ListTile(
-  //                       title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16)),
-  //                     );
-  //                   },
-  //                 );
-  //               },
-  //             ),
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context),
-  //             child: const Text('Close'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+  void addTaskToTeam(Team team) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String taskName = '';
+
+        return AlertDialog(
+          title: Text('Add Task to ${team.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) => taskName = value,
+                decoration: const InputDecoration(labelText: 'Task Name'),
+              ),
+              TextField(
+                onChanged: (value) => taskName = value,
+                decoration: const InputDecoration(labelText: 'Points'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (taskName.isNotEmpty) {
+                  String teamId = team.name.replaceAll(' ', '').toLowerCase();
+
+                  // Add the task to the team's list of tasks
+                  await db.collection('teams').doc(teamId).update({
+                    'tasks': FieldValue.arrayUnion([taskName])
+                  });
+
+                  // Fetch the updated list of teams after adding the task
+                  fetchTeams();
+
+                  // Show a success message
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Task added successfully'),
+                  ));
+
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
 
   void fetchTeams() async {
@@ -271,6 +283,10 @@ class _TeamsPageState extends State<TeamsPage> {
                   return Card(
                     margin: const EdgeInsets.all(8.0),
                     child: ExpansionTile(
+                      leading: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => addTaskToTeam(team),
+                      ),
                       title: Text(
                         team.name,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -286,25 +302,16 @@ class _TeamsPageState extends State<TeamsPage> {
                               return Text('Error: ${snapshot.error}');
                             } else {
                               final userPoints = snapshot.data;
-                              return Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => const UserGoalPage()),
-                                      ),
-                                      child: Chip(
-                                        label: Text(user),
-                                      ),
-                                    ),
-                                    Text(
-                                      'Points: $userPoints',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
+                              return ListTile(
+                                leading: Text('${team.users.indexOf(user) + 1}', style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, color: Colors.deepPurple)),
+                                title: Text(user, style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, fontWeight: FontWeight.bold)),
+                                subtitle: Text('$userPoints Points', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16, color: Colors.black54)),
+                                tileColor: user == UserPage.userId ? Colors.deepPurple[50] : Colors.white,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const UserGoalPage(),
+                                  ),
                                 ),
                               );
                             }
