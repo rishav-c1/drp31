@@ -10,19 +10,23 @@ class Team {
   final String name;
   final List<String> users;
   final int memberCount;
-  final List<String> tasks; // Added tasks field
+  final List<Task> tasks; // Modified tasks field to hold Task objects
 
   Team({
     required this.name,
     required this.users,
-    required this.tasks, // Added tasks field
+    required this.tasks, // Modified tasks field
   }) : memberCount = users.length;
 }
 
 class Task {
   final String name;
+  bool isAchieved; // Added isAchieved field
 
-  Task({required this.name});
+  Task({
+    required this.name,
+    this.isAchieved = false, // Initialize isAchieved as false
+  });
 }
 
 class TeamsPage extends StatefulWidget {
@@ -60,9 +64,10 @@ class _TeamsPageState extends State<TeamsPage> {
       context: context,
       builder: (BuildContext context) {
         String taskName = '';
+        int points = 0;
 
         return AlertDialog(
-          title: Text('Add Task to ${team.name}'),
+          title: Text('Add Goal to ${team.name}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -71,7 +76,7 @@ class _TeamsPageState extends State<TeamsPage> {
                 decoration: const InputDecoration(labelText: 'Task Name'),
               ),
               TextField(
-                onChanged: (value) => taskName = value,
+                onChanged: (value) => points = value as int,
                 decoration: const InputDecoration(labelText: 'Points'),
               ),
             ],
@@ -118,7 +123,7 @@ class _TeamsPageState extends State<TeamsPage> {
         final data = doc.data();
         final name = data['name'] as String?;
         final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
-        final tasks = List<String>.from(data['tasks'] as List<dynamic>? ?? []);
+        final tasks = (data['tasks'] as List<dynamic>? ?? []).map((task) => Task(name: task)).toList(); // Convert task strings to Task objects
         if (name != null) {
           return Team(name: name, users: users, tasks: tasks);
         }
@@ -207,12 +212,12 @@ class _TeamsPageState extends State<TeamsPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Tasks for ${team.name}'),
+          title: Text('Goals for ${team.name}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (team.tasks.isEmpty)
-                const Text('No tasks available')
+                const Text('No goals available')
               else
                 ListView.builder(
                   shrinkWrap: true,
@@ -220,7 +225,13 @@ class _TeamsPageState extends State<TeamsPage> {
                   itemBuilder: (context, index) {
                     final task = team.tasks[index];
                     return ListTile(
-                      title: Text(task),
+                      title: Text(
+                        task as String,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -284,40 +295,62 @@ class _TeamsPageState extends State<TeamsPage> {
                     margin: const EdgeInsets.all(8.0),
                     child: ExpansionTile(
                       leading: IconButton(
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(Icons.add_box_outlined),
                         onPressed: () => addTaskToTeam(team),
+                        tooltip: 'Add Team Goal',
                       ),
                       title: Text(
                         team.name,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                       ),
                       subtitle: Text('${team.memberCount} members'),
-                      children: team.users.map((user) => FutureBuilder<int>(
-                        future: getUserPoints(user),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          } else {
-                            if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
+                      children: <Widget>[
+                        ...team.users.map((user) => FutureBuilder<int>(
+                          future: getUserPoints(user),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
                             } else {
-                              final userPoints = snapshot.data;
-                              return ListTile(
-                                leading: Text('${team.users.indexOf(user) + 1}', style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, color: Colors.deepPurple)),
-                                title: Text(user, style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, fontWeight: FontWeight.bold)),
-                                subtitle: Text('$userPoints Points', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16, color: Colors.black54)),
-                                tileColor: user == UserPage.userId ? Colors.deepPurple[50] : Colors.white,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const UserGoalPage(),
+                              if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              } else {
+                                final userPoints = snapshot.data;
+                                return ListTile(
+                                  leading: Text('${team.users.indexOf(user) + 1}', style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, color: Colors.deepPurple)),
+                                  title: Text(user, style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, fontWeight: FontWeight.bold)),
+                                  subtitle: Text('$userPoints Points', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16, color: Colors.black54)),
+                                  tileColor: user == UserPage.userId ? Colors.deepPurple[50] : Colors.white,
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const UserGoalPage(),
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             }
-                          }
-                        },
-                      )).toList(),
+                          },
+                        )).toList(),
+                        const Divider(),
+                        ...team.tasks.map((task) => ListTile(
+                          title: Text(
+                            task.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          trailing: Checkbox(
+                            value: task.isAchieved,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                task.isAchieved = value!;
+                              });
+                            },
+                          ),
+                          tileColor: task.isAchieved ? Colors.green[100] : null,
+                        )).toList(),
+                      ],
                     ),
                   );
                 },
@@ -329,7 +362,7 @@ class _TeamsPageState extends State<TeamsPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: addTeamWithUsers,
         backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.group_add),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
