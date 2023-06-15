@@ -6,15 +6,15 @@ import 'leaderboard.dart';
 import 'main.dart';
 import 'teams.dart';
 
-class GoalPage extends StatefulWidget {
+class UserGoalPage extends StatefulWidget {
 
-  const GoalPage({Key ? key}) : super(key:key);
+  const UserGoalPage({Key ? key}) : super(key:key);
 
   @override
-  State<GoalPage> createState() => _GoalPageState();
+  State<UserGoalPage> createState() => _UserGoalPageState();
 }
 
-class _GoalPageState extends State<GoalPage> {
+class _UserGoalPageState extends State<UserGoalPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   late int userPoints = 0;
 
@@ -73,7 +73,7 @@ class _GoalPageState extends State<GoalPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'My Goals',
+          "Rosa's Goals",
           style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple,
@@ -92,21 +92,9 @@ class _GoalPageState extends State<GoalPage> {
                   fontFamily: 'Roboto'),
             ),
             const SizedBox(height: 32),
-            FloatingActionButton(
-              heroTag: "btn1",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AddGoalPage()),
-                );
-              },
-              backgroundColor: Colors.deepPurple,
-              child: const Icon(Icons.add, color: Colors.white),
-            ),
-            const SizedBox(height: 32),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
-                stream: db.collection('tasks').where('userId', isEqualTo: UserPage.userId).snapshots(),
+                stream: db.collection('tasks').where('userId', isEqualTo: 'Rosa').snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
@@ -133,12 +121,8 @@ class _GoalPageState extends State<GoalPage> {
                               children: <Widget>[
                                 const SizedBox(width: 10),
                                 Text(
-                                  '+$points points  ',
+                                  '$points points  ',
                                   style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
-                                ),
-                                Icon(
-                                  isAchieved ? Icons.check_box : Icons.check_box_outline_blank,
-                                  color: isAchieved ? Colors.green : Colors.black54,
                                 ),
                               ],
                             ),
@@ -153,39 +137,6 @@ class _GoalPageState extends State<GoalPage> {
             const SizedBox(height: 32)
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.task),
-            label: 'Goals',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group),
-            label: 'Teams',
-          ),
-        ],
-        currentIndex: 1,
-        selectedItemColor: Colors.deepPurple,
-        onTap: (int index) {
-          switch (index) {
-            case 0:
-              Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => const MyHomePage()));
-              break;
-            case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TeamsPage()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

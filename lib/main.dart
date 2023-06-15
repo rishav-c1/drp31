@@ -105,10 +105,6 @@ class _MyHomePage extends State<MyHomePage> {
             label: 'Goals',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard),
-            label: 'Leaderboard',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.group),
             label: 'Teams',
           ),
@@ -125,12 +121,6 @@ class _MyHomePage extends State<MyHomePage> {
               );
               break;
             case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LeaderboardPage()),
-              );
-              break;
-            case 3:
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const TeamsPage()),

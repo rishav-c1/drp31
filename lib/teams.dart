@@ -1,4 +1,5 @@
 import 'package:drp31/main.dart';
+import 'package:drp31/userGoal.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -54,18 +55,60 @@ class _TeamsPageState extends State<TeamsPage> {
     }
   }
 
+  // void viewUserTasks(String userId) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text('Tasks for User $userId'),
+  //         content: Container(
+  //           height: 300, // Adjust this value as needed
+  //           child: SingleChildScrollView(
+  //             child: StreamBuilder<QuerySnapshot>(
+  //               stream: db.collection('tasks').where('userId', isEqualTo: userId).snapshots(),
+  //               builder: (context, snapshot) {
+  //                 if (!snapshot.hasData) {
+  //                   return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
+  //                 }
+  //                 final List<DocumentSnapshot> documents = snapshot.data!.docs;
+  //                 return ListView.builder(
+  //                   shrinkWrap: true,
+  //                   physics: const NeverScrollableScrollPhysics(),
+  //                   itemCount: documents.length,
+  //                   itemBuilder: (context, index) {
+  //                     final task = documents[index];
+  //                     final data = task.data() as Map<String, dynamic>;
+  //                     return ListTile(
+  //                       title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16)),
+  //                     );
+  //                   },
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text('Close'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
+
   void fetchTeams() async {
     final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
     setState(() {
       teams = teamSnapshot.docs.map((doc) {
         final data = doc.data();
-        if (data != null) {
-          final name = data['name'] as String?;
-          final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
-          final tasks = List<String>.from(data['tasks'] as List<dynamic>? ?? []);
-          if (name != null) {
-            return Team(name: name, users: users, tasks: tasks);
-          }
+        final name = data['name'] as String?;
+        final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
+        final tasks = List<String>.from(data['tasks'] as List<dynamic>? ?? []);
+        if (name != null) {
+          return Team(name: name, users: users, tasks: tasks);
         }
         return null;
       }).where((team) => team != null).cast<Team>().toList();
@@ -248,8 +291,14 @@ class _TeamsPageState extends State<TeamsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Chip(
-                                      label: Text(user),
+                                    GestureDetector(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const UserGoalPage()),
+                                      ),
+                                      child: Chip(
+                                        label: Text(user),
+                                      ),
                                     ),
                                     Text(
                                       'Points: $userPoints',
@@ -287,15 +336,11 @@ class _TeamsPageState extends State<TeamsPage> {
             label: 'Goals',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard),
-            label: 'Leaderboard',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: 'Teams',
           ),
         ],
-        currentIndex: 3,
+        currentIndex: 2,
         selectedItemColor: Colors.deepPurple,
         onTap: (int index) {
           switch (index) {
@@ -306,10 +351,6 @@ class _TeamsPageState extends State<TeamsPage> {
             case 1:
               Navigator.push(
                   context, MaterialPageRoute(builder: (context) => const GoalPage()));
-              break;
-            case 2:
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => const LeaderboardPage()));
               break;
           }
         },
