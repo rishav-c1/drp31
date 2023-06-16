@@ -10,23 +10,21 @@ class Team {
   final String name;
   final List<String> users;
   final int memberCount;
-  final List<Task> tasks; // Modified tasks field to hold Task objects
+  final List<Task> tasks; // Tasks are now of type Task
 
   Team({
     required this.name,
     required this.users,
-    required this.tasks, // Modified tasks field
+    required this.tasks, // Tasks are now of type Task
   }) : memberCount = users.length;
 }
 
 class Task {
   final String name;
-  bool isAchieved; // Added isAchieved field
+  late final bool isAchieved;
+  final int points;
 
-  Task({
-    required this.name,
-    this.isAchieved = false, // Initialize isAchieved as false
-  });
+  Task({required this.name, required this.isAchieved, required this.points});
 }
 
 class TeamsPage extends StatefulWidget {
@@ -93,7 +91,11 @@ class _TeamsPageState extends State<TeamsPage> {
 
                   // Add the task to the team's list of tasks
                   await db.collection('teams').doc(teamId).update({
-                    'tasks': FieldValue.arrayUnion([taskName])
+                    'tasks': FieldValue.arrayUnion([{
+                      'name': taskName,
+                      'isAchieved': false,
+                      'points': points,
+                    }])
                   });
 
                   // Fetch the updated list of teams after adding the task
@@ -116,6 +118,7 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
 
+
   void fetchTeams() async {
     final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
     setState(() {
@@ -123,7 +126,13 @@ class _TeamsPageState extends State<TeamsPage> {
         final data = doc.data();
         final name = data['name'] as String?;
         final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
-        final tasks = (data['tasks'] as List<dynamic>? ?? []).map((task) => Task(name: task)).toList(); // Convert task strings to Task objects
+        final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
+          final taskMap = taskData as Map<String, dynamic>;
+          final taskName = taskMap['name'] as String;
+          final isAchieved = taskMap['isAchieved'] as bool;
+          final points = taskMap['points'] as int;
+          return Task(name: taskName, isAchieved: isAchieved, points: points);
+        }).toList();
         if (name != null) {
           return Team(name: name, users: users, tasks: tasks);
         }
@@ -226,7 +235,7 @@ class _TeamsPageState extends State<TeamsPage> {
                     final task = team.tasks[index];
                     return ListTile(
                       title: Text(
-                        task as String,
+                        task.name,  // Use task.name instead of casting task to a string
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -345,6 +354,10 @@ class _TeamsPageState extends State<TeamsPage> {
                             onChanged: (bool? value) {
                               setState(() {
                                 task.isAchieved = value!;
+                              });
+                              // Update the task in the Firestore database
+                              db.collection('teams').doc(team.name.replaceAll(' ', '').toLowerCase()).update({
+                                'tasks': team.tasks.map((t) => t == task ? {'name': task.name, 'isAchieved': task.isAchieved, 'points': task.points} : t).toList()
                               });
                             },
                           ),
