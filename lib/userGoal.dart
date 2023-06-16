@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class UserGoalPage extends StatefulWidget {
 
-  const UserGoalPage({Key? key, required String this.userId}):super(key:key);
+  const UserGoalPage({Key? key, required this.userId}):super(key:key);
 
   final String userId;
 
@@ -55,7 +55,7 @@ class _UserGoalPageState extends State<UserGoalPage> {
       appBar: AppBar(
         title: Text(
           "$userId's Goals",
-          style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
+          style: const TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple,
         elevation: 0,
