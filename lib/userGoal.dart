@@ -21,6 +21,7 @@ class _UserGoalPageState extends State<UserGoalPage> {
   @override
   void initState() {
     super.initState();
+    userId = widget.userId;
     loadUserPoints();
   }
 
@@ -30,7 +31,10 @@ class _UserGoalPageState extends State<UserGoalPage> {
   }
 
   void loadUserPoints() async {
-    userPoints = await getUserPoints(userId);
+    int points = await getUserPoints(userId);
+    setState(() {
+      userPoints = points;
+    });
   }
 
   Future<int> getUserPoints(String userId) async {
