@@ -41,10 +41,7 @@ class _UserGoalPageState extends State<UserGoalPage> {
     final userRef = db.collection('users').doc(userId);
     final snapshot = await userRef.get();
 
-    print("HERE");
-
     if (snapshot.exists) {
-      print("HERE 2");
       final data = snapshot.data() as Map<String, dynamic>;
       final points = data['points'];
       return points;
