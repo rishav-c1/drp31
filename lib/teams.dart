@@ -21,7 +21,7 @@ class Team {
 
 class Task {
   final String name;
-  late final bool isAchieved;
+  bool isAchieved;
   final int points;
 
   Task({required this.name, required this.isAchieved, required this.points});
@@ -98,6 +98,8 @@ class _TeamsPageState extends State<TeamsPage> {
                     }])
                   });
 
+                  print(await db.collection('teams').doc(teamId).toString());
+
                   // Fetch the updated list of teams after adding the task
                   fetchTeams();
 
@@ -117,16 +119,17 @@ class _TeamsPageState extends State<TeamsPage> {
     );
   }
 
-
-
   void fetchTeams() async {
     final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
     setState(() {
       teams = teamSnapshot.docs.map((doc) {
         final data = doc.data();
+        print(data);
         final name = data['name'] as String?;
         final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
+        print(data['tasks']);
         final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
+          print("TASKDATA: $taskData");
           final taskMap = taskData as Map<String, dynamic>;
           final taskName = taskMap['name'] as String;
           final isAchieved = taskMap['isAchieved'] as bool;
@@ -332,7 +335,7 @@ class _TeamsPageState extends State<TeamsPage> {
                                   onTap: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const UserGoalPage(),
+                                      builder: (context) => UserGoalPage(userId: user),
                                     ),
                                   ),
                                 );
@@ -349,18 +352,37 @@ class _TeamsPageState extends State<TeamsPage> {
                               fontStyle: FontStyle.italic,
                             ),
                           ),
-                          trailing: Checkbox(
-                            value: task.isAchieved,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                task.isAchieved = value!;
-                              });
-                              // Update the task in the Firestore database
-                              db.collection('teams').doc(team.name.replaceAll(' ', '').toLowerCase()).update({
-                                'tasks': team.tasks.map((t) => t == task ? {'name': task.name, 'isAchieved': task.isAchieved, 'points': task.points} : t).toList()
-                              });
-                            },
-                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Text(
+                                '+${task.points} points  ',
+                                style: TextStyle(color: task.isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
+                              ),
+                              Checkbox(
+                                value: task.isAchieved,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    task.isAchieved = value!;
+                                  });
+                                  // Update the task in the Firestore database
+                                  db.collection('teams').doc(team.name.replaceAll(' ', '').toLowerCase()).update({
+                                    'tasks': team.tasks.map((t) => t == task ? {'name': task.name, 'isAchieved': task.isAchieved, 'points': task.points} : t).toList()
+                                  });
+
+                                  if(task.isAchieved) {
+                                    db.collection('users').doc(UserPage.userId).update({
+                                      'points': FieldValue.increment(task.points),
+                                    });
+                                  } else {
+                                    db.collection('users').doc(UserPage.userId).update({
+                                      'points': FieldValue.increment(-task.points),
+                                    });
+                                  }
+
+                                },
+                              ),
+                            ]),
                           tileColor: task.isAchieved ? Colors.green[100] : null,
                         )).toList(),
                       ],

@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 class UserGoalPage extends StatefulWidget {
 
-  const UserGoalPage({super.key});
+  const UserGoalPage({Key? key, required String this.userId}):super(key:key);
+
+  final String userId;
 
   @override
   State<UserGoalPage> createState() => _UserGoalPageState();
@@ -12,7 +14,9 @@ class UserGoalPage extends StatefulWidget {
 
 class _UserGoalPageState extends State<UserGoalPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
+
   late int userPoints = 0;
+  late String userId = widget.userId;
 
   @override
   void initState() {
@@ -26,14 +30,17 @@ class _UserGoalPageState extends State<UserGoalPage> {
   }
 
   void loadUserPoints() async {
-    userPoints = await getUserPoints(UserPage.userId);
+    userPoints = await getUserPoints(userId);
   }
 
   Future<int> getUserPoints(String userId) async {
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+    final userRef = db.collection('users').doc(userId);
     final snapshot = await userRef.get();
 
+    print("HERE");
+
     if (snapshot.exists) {
+      print("HERE 2");
       final data = snapshot.data() as Map<String, dynamic>;
       final points = data['points'];
       return points;
@@ -42,34 +49,12 @@ class _UserGoalPageState extends State<UserGoalPage> {
     }
   }
 
-  void toggleAchieved(String taskId, String userId, bool currentStatus, int points) async {
-    await db.collection('tasks').doc(taskId).update({'achieved': !currentStatus});
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-    final snapshot = await userRef.get();
-    final data = snapshot.data() as Map<String, dynamic>;
-    int totalPoints = data['points'];
-    int completed = data['completed'];
-    if (!currentStatus) {
-      totalPoints += points;
-      completed += 1;
-    } else {
-      totalPoints -= points;
-      completed = (completed > 0) ? completed - 1 : 0;
-    }
-    await userRef.update({'points': totalPoints, 'completed': completed});
-
-    // update the userPoints state and refresh the UI
-    setState(() {
-      userPoints = totalPoints;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Rosa's Goals",
+        title: Text(
+          "$userId's Goals",
           style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple,
@@ -90,7 +75,7 @@ class _UserGoalPageState extends State<UserGoalPage> {
             const SizedBox(height: 32),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
-                stream: db.collection('tasks').where('userId', isEqualTo: UserPage.userId).snapshots(),
+                stream: db.collection('tasks').where('userId', isEqualTo: userId).snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
@@ -110,19 +95,11 @@ class _UserGoalPageState extends State<UserGoalPage> {
                         color: isAchieved ? Colors.green[100] : Colors.white,
                         child: ListTile(
                           title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16)),
-                          trailing: TextButton(
-                            onPressed: () => toggleAchieved(taskId, userId, isAchieved, points),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                const SizedBox(width: 10),
-                                Text(
-                                  '$points points  ',
-                                  style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
-                                ),
-                              ],
+                          trailing: Text(
+                              '$points points  ',
+                              style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
                             ),
-                          ),
+
                         ),
                       );
                     },
