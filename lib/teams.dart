@@ -1,10 +1,10 @@
 import 'package:drp31/main.dart';
 import 'package:drp31/userGoal.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'goals.dart';
-import 'leaderboard.dart';
 
 class Team {
   final String name;
@@ -41,7 +41,7 @@ class _TeamsPageState extends State<TeamsPage> {
   @override
   void initState() {
     super.initState();
-    fetchTeams();
+    Timer.periodic(const Duration(milliseconds: 500), (Timer t) => getTeams());
   }
 
   Future<int> getUserPoints(String userId) async {
@@ -101,7 +101,7 @@ class _TeamsPageState extends State<TeamsPage> {
                   print(await db.collection('teams').doc(teamId).toString());
 
                   // Fetch the updated list of teams after adding the task
-                  fetchTeams();
+                  getTeams();
 
                   // Show a success message
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -119,29 +119,27 @@ class _TeamsPageState extends State<TeamsPage> {
     );
   }
 
-  void fetchTeams() async {
-    final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
-    setState(() {
-      teams = teamSnapshot.docs.map((doc) {
-        final data = doc.data();
-        print(data);
-        final name = data['name'] as String?;
-        final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
-        print(data['tasks']);
-        final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
-          print("TASKDATA: $taskData");
-          final taskMap = taskData as Map<String, dynamic>;
-          final taskName = taskMap['name'] as String;
-          final isAchieved = taskMap['isAchieved'] as bool;
-          final points = taskMap['points'] as int;
-          return Task(name: taskName, isAchieved: isAchieved, points: points);
-        }).toList();
-        if (name != null) {
-          return Team(name: name, users: users, tasks: tasks);
-        }
-        return null;
-      }).where((team) => team != null).cast<Team>().toList();
-    });
+  Stream<List<Team>> getTeams() async* {
+    yield* db
+        .collection('teams')
+        .where('users', arrayContains: UserPage.userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+      final data = doc.data();
+      final name = data['name'] as String?;
+      final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
+      final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
+        final taskMap = taskData as Map<String, dynamic>;
+        final taskName = taskMap['name'] as String;
+        final isAchieved = taskMap['isAchieved'] as bool;
+        final points = taskMap['points'] as int;
+        return Task(name: taskName, isAchieved: isAchieved, points: points);
+      }).toList();
+      if (name != null) {
+        return Team(name: name, users: users, tasks: tasks);
+      }
+      return null;
+    }).where((team) => team != null).cast<Team>().toList());
   }
 
   void joinTeam(String teamName) async {
@@ -167,7 +165,7 @@ class _TeamsPageState extends State<TeamsPage> {
     }
 
     // Fetch the updated list of teams after joining
-    fetchTeams();
+    getTeams();
   }
 
   void addTeamWithUsers() {
@@ -201,7 +199,7 @@ class _TeamsPageState extends State<TeamsPage> {
                   joinTeam(teamName);
 
                   // Fetch the updated list of teams after adding
-                  fetchTeams();
+                  getTeams();
 
                   // Show a success message
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -267,26 +265,8 @@ class _TeamsPageState extends State<TeamsPage> {
         title: const Text('Teams'),
         backgroundColor: Colors.deepPurple,
       ),
-      body: FutureBuilder<List<Team>>(
-        future: Future.wait(
-          teams.map((team) async {
-            final usersWithPoints = await Future.wait(
-              team.users.map((user) async {
-                final points = await getUserPoints(user);
-                return User(name: user, points: points);
-              }).toList(),
-            );
-
-            // Sort users in descending order of points
-            usersWithPoints.sort((a, b) => b.points.compareTo(a.points));
-
-            return Team(
-              name: team.name,
-              users: usersWithPoints.map((user) => user.name).toList(),
-              tasks: team.tasks,
-            );
-          }).toList(),
-        ),
+      body: StreamBuilder<List<Team>>(
+        stream: getTeams(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(

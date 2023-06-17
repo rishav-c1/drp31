@@ -30,13 +30,16 @@ class _AddGoalPageState extends State<AddGoalPage> {
       await db.collection('tasks').add({
         'task': goal,
         'achieved': false,
-        'points': int.parse(points), // Add the task type to the Firestore document
+        'points': int.parse(points),
+        // Add the task type to the Firestore document
         'userId': UserPage.userId,
-        'isPrivate': isPrivate, // Add the task privacy status to the Firestore document
+        'isPrivate': isPrivate,
+        // Add the task privacy status to the Firestore document
       });
       goalController.clear();
       pointController.clear();
-      Navigator.pop(context); // Go back to the previous page after adding the goal
+      Navigator.pop(
+          context); // Go back to the previous page after adding the goal
     }
   }
 
@@ -44,7 +47,9 @@ class _AddGoalPageState extends State<AddGoalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Goal', style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white)),
+        title: const Text('Add Goal',
+            style: TextStyle(
+                fontFamily: 'Roboto', fontSize: 24, color: Colors.white)),
         backgroundColor: Colors.deepPurple,
         elevation: 0,
       ),
@@ -72,15 +77,37 @@ class _AddGoalPageState extends State<AddGoalPage> {
                 ),
                 keyboardType: TextInputType.number,
               ),
-              SwitchListTile(
-                title: const Text('Private', style: TextStyle(fontFamily: 'Roboto')),
-                value: isPrivate,
-                onChanged: (bool value) {
-                  setState(() {
-                    isPrivate = value;
-                  });
-                },
-                secondary: const Icon(Icons.lock),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  SwitchListTile(
+                    title: const Text(
+                      'Private',
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w500, // Add some font weight
+                        color: Colors
+                            .deepPurple, // Adjust color to match your branding
+                      ),
+                    ),
+                    value: isPrivate,
+                    onChanged: (bool value) {
+                      setState(() {
+                        isPrivate = value;
+                      });
+                    },
+                    activeColor: Colors.deepPurple,
+                    // Adjust color to match your branding
+                    inactiveThumbColor: Colors.black26,
+                    // Adjust color to match your branding
+                    secondary: Icon(
+                      Icons.lock,
+                      color: isPrivate
+                          ? Colors.deepPurple
+                          : Colors.black26, // Adjust color based on state
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16.0),
               SizedBox(
@@ -89,16 +116,21 @@ class _AddGoalPageState extends State<AddGoalPage> {
                 child: ElevatedButton(
                   onPressed: addGoal,
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.deepPurple),
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.deepPurple),
                     shape: MaterialStateProperty.all(
                       RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(35), // Half of width/height for a circle button
+                        borderRadius: BorderRadius.circular(
+                            35), // Half of width/height for a circle button
                       ),
                     ),
-                    padding: MaterialStateProperty.all(const EdgeInsets.all(0)), // Remove padding
-                    elevation: MaterialStateProperty.all(0), // Remove elevation/shadow
+                    padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                    // Remove padding
+                    elevation:
+                        MaterialStateProperty.all(0), // Remove elevation/shadow
                   ),
-                  child: Icon(Icons.add, size: 32, color: Colors.white), // Plus icon
+                  child: Icon(Icons.add,
+                      size: 32, color: Colors.white), // Plus icon
                 ),
               ),
             ],

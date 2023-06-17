@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drp31/main.dart';
 import 'package:flutter/material.dart';
 
 class UserGoalPage extends StatefulWidget {
@@ -50,6 +49,19 @@ class _UserGoalPageState extends State<UserGoalPage> {
     }
   }
 
+  Future<bool> getIsPrivate(String taskId) async {
+    final taskRef = FirebaseFirestore.instance.collection('tasks').doc(taskId);
+    final snapshot = await taskRef.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final isPrivate = data['isPrivate'] ?? false; // If isPrivate is null, it's set to false
+      return isPrivate;
+    } else {
+      return false; // Default value if the document doesn't exist
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,31 +94,34 @@ class _UserGoalPageState extends State<UserGoalPage> {
                     return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
                   }
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
+                  // Filter out tasks that are marked as private
+                  final List<DocumentSnapshot> publicTasks = documents.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return data['isPrivate'] == null || !data['isPrivate'];
+                  }).toList();
                   return ListView.builder(
                     shrinkWrap: true,
-                    itemCount: documents.length,
+                    itemCount: publicTasks.length,
                     itemBuilder: (context, index) {
-                      final task = documents[index];
-                      final taskId = task.id;
+                      final task = publicTasks[index];
                       final data = task.data() as Map<String, dynamic>;
                       final isAchieved = data['achieved'] ?? false;
                       final points = data['points'] ?? 0;
-                      final userId = data['userId'];
                       return Card(
                         color: isAchieved ? Colors.green[100] : Colors.white,
                         child: ListTile(
                           title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16)),
                           trailing: Text(
-                              '$points points  ',
-                              style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
-                            ),
+                            '$points points  ',
+                            style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
+                          ),
 
                         ),
                       );
                     },
                   );
                 },
-              ),
+              )
             ),
             const SizedBox(height: 32)
           ],
