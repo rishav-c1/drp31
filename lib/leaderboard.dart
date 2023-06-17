@@ -21,7 +21,7 @@ class LeaderboardPage extends StatefulWidget {
 
 class _LeaderboardPage extends State<LeaderboardPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
-  int selectedIndex = 0;
+  int isPriv = 0;
   final List<User> users = [
     User(name: 'User 1', points: 150),
     User(name: 'User 2', points: 200),

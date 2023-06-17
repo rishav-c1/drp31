@@ -14,7 +14,7 @@ class _AddGoalPageState extends State<AddGoalPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   final goalController = TextEditingController();
   final pointController = TextEditingController();
-  int selectedIndex = 0; // Default selected index is 0 (Work)
+  bool isPrivate = false;
 
   @override
   void dispose() {
@@ -30,9 +30,9 @@ class _AddGoalPageState extends State<AddGoalPage> {
       await db.collection('tasks').add({
         'task': goal,
         'achieved': false,
-        'points': int.parse(points),
-        'type': selectedIndex == 0 ? 'Work' : 'Life', // Add the task type to the Firestore document
+        'points': int.parse(points), // Add the task type to the Firestore document
         'userId': UserPage.userId,
+        'isPrivate': isPrivate, // Add the task privacy status to the Firestore document
       });
       goalController.clear();
       pointController.clear();
@@ -72,87 +72,34 @@ class _AddGoalPageState extends State<AddGoalPage> {
                 ),
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 16.0),
-              Container(
-                width: double.infinity,
-                height: 50.0,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30.0),
-                  border: Border.all(
-                    color: Colors.transparent,
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedIndex = 0; // Set the selected index to 0 (Work)
-                          });
-                        },
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(28.0),
-                              bottomLeft: Radius.circular(28.0),
-                            ),
-                            color: selectedIndex == 0 ? Colors.deepPurple : Colors.grey,
-                          ),
-                          child: Text(
-                            'Work',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              color: selectedIndex == 0 ? Colors.white : Colors.black,
-                              fontSize: 18.0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedIndex = 1; // Set the selected index to 1 (Life)
-                          });
-                        },
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(28.0),
-                              bottomRight: Radius.circular(28.0),
-                            ),
-                            color: selectedIndex == 1 ? Colors.deepPurple : Colors.grey,
-                          ),
-                          child: Text(
-                            'Life',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              color: selectedIndex == 1 ? Colors.white : Colors.black,
-                              fontSize: 18.0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              SwitchListTile(
+                title: const Text('Private', style: TextStyle(fontFamily: 'Roboto')),
+                value: isPrivate,
+                onChanged: (bool value) {
+                  setState(() {
+                    isPrivate = value;
+                  });
+                },
+                secondary: const Icon(Icons.lock),
               ),
               const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: addGoal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+              SizedBox(
+                width: 70, // Adjust the width to your desired size
+                height: 70,
+                child: ElevatedButton(
+                  onPressed: addGoal,
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.deepPurple),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(35), // Half of width/height for a circle button
+                      ),
+                    ),
+                    padding: MaterialStateProperty.all(const EdgeInsets.all(0)), // Remove padding
+                    elevation: MaterialStateProperty.all(0), // Remove elevation/shadow
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  child: Icon(Icons.add, size: 32, color: Colors.white), // Plus icon
                 ),
-                child: const Text('Add', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, color: Colors.white)),
               ),
             ],
           ),
