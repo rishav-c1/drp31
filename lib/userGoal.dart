@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drp31/main.dart';
 import 'package:flutter/material.dart';
 
 class UserGoalPage extends StatefulWidget {
 
-  const UserGoalPage({super.key});
+  const UserGoalPage({Key? key, required this.userId}):super(key:key);
+
+  final String userId;
 
   @override
   State<UserGoalPage> createState() => _UserGoalPageState();
@@ -12,11 +13,14 @@ class UserGoalPage extends StatefulWidget {
 
 class _UserGoalPageState extends State<UserGoalPage> {
   FirebaseFirestore db = FirebaseFirestore.instance;
+
   late int userPoints = 0;
+  late String userId = widget.userId;
 
   @override
   void initState() {
     super.initState();
+    userId = widget.userId;
     loadUserPoints();
   }
 
@@ -26,11 +30,14 @@ class _UserGoalPageState extends State<UserGoalPage> {
   }
 
   void loadUserPoints() async {
-    userPoints = await getUserPoints(UserPage.userId);
+    int points = await getUserPoints(userId);
+    setState(() {
+      userPoints = points;
+    });
   }
 
   Future<int> getUserPoints(String userId) async {
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+    final userRef = db.collection('users').doc(userId);
     final snapshot = await userRef.get();
 
     if (snapshot.exists) {
@@ -42,35 +49,26 @@ class _UserGoalPageState extends State<UserGoalPage> {
     }
   }
 
-  void toggleAchieved(String taskId, String userId, bool currentStatus, int points) async {
-    await db.collection('tasks').doc(taskId).update({'achieved': !currentStatus});
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-    final snapshot = await userRef.get();
-    final data = snapshot.data() as Map<String, dynamic>;
-    int totalPoints = data['points'];
-    int completed = data['completed'];
-    if (!currentStatus) {
-      totalPoints += points;
-      completed += 1;
-    } else {
-      totalPoints -= points;
-      completed = (completed > 0) ? completed - 1 : 0;
-    }
-    await userRef.update({'points': totalPoints, 'completed': completed});
+  Future<bool> getIsPrivate(String taskId) async {
+    final taskRef = FirebaseFirestore.instance.collection('tasks').doc(taskId);
+    final snapshot = await taskRef.get();
 
-    // update the userPoints state and refresh the UI
-    setState(() {
-      userPoints = totalPoints;
-    });
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final isPrivate = data['isPrivate'] ?? false; // If isPrivate is null, it's set to false
+      return isPrivate;
+    } else {
+      return false; // Default value if the document doesn't exist
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Rosa's Goals",
-          style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
+        title: Text(
+          "$userId's Goals",
+          style: const TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple,
         elevation: 0,
@@ -90,45 +88,40 @@ class _UserGoalPageState extends State<UserGoalPage> {
             const SizedBox(height: 32),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
-                stream: db.collection('tasks').where('userId', isEqualTo: UserPage.userId).snapshots(),
+                stream: db.collection('tasks').where('userId', isEqualTo: userId).snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
                   }
                   final List<DocumentSnapshot> documents = snapshot.data!.docs;
+                  // Filter out tasks that are marked as private
+                  final List<DocumentSnapshot> publicTasks = documents.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return data['isPrivate'] == null || !data['isPrivate'];
+                  }).toList();
                   return ListView.builder(
                     shrinkWrap: true,
-                    itemCount: documents.length,
+                    itemCount: publicTasks.length,
                     itemBuilder: (context, index) {
-                      final task = documents[index];
-                      final taskId = task.id;
+                      final task = publicTasks[index];
                       final data = task.data() as Map<String, dynamic>;
                       final isAchieved = data['achieved'] ?? false;
                       final points = data['points'] ?? 0;
-                      final userId = data['userId'];
                       return Card(
                         color: isAchieved ? Colors.green[100] : Colors.white,
                         child: ListTile(
                           title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16)),
-                          trailing: TextButton(
-                            onPressed: () => toggleAchieved(taskId, userId, isAchieved, points),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                const SizedBox(width: 10),
-                                Text(
-                                  '$points points  ',
-                                  style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
-                                ),
-                              ],
-                            ),
+                          trailing: Text(
+                            '$points points  ',
+                            style: TextStyle(color: isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
                           ),
+
                         ),
                       );
                     },
                   );
                 },
-              ),
+              )
             ),
             const SizedBox(height: 32)
           ],

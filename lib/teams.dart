@@ -1,32 +1,30 @@
 import 'package:drp31/main.dart';
 import 'package:drp31/userGoal.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'goals.dart';
-import 'leaderboard.dart';
 
 class Team {
   final String name;
   final List<String> users;
   final int memberCount;
-  final List<Task> tasks; // Modified tasks field to hold Task objects
+  final List<Task> tasks; // Tasks are now of type Task
 
   Team({
     required this.name,
     required this.users,
-    required this.tasks, // Modified tasks field
+    required this.tasks, // Tasks are now of type Task
   }) : memberCount = users.length;
 }
 
 class Task {
   final String name;
-  bool isAchieved; // Added isAchieved field
+  bool isAchieved;
+  final int points;
 
-  Task({
-    required this.name,
-    this.isAchieved = false, // Initialize isAchieved as false
-  });
+  Task({required this.name, required this.isAchieved, required this.points});
 }
 
 class TeamsPage extends StatefulWidget {
@@ -43,7 +41,7 @@ class _TeamsPageState extends State<TeamsPage> {
   @override
   void initState() {
     super.initState();
-    fetchTeams();
+    Timer.periodic(const Duration(milliseconds: 500), (Timer t) => getTeams());
   }
 
   Future<int> getUserPoints(String userId) async {
@@ -93,11 +91,17 @@ class _TeamsPageState extends State<TeamsPage> {
 
                   // Add the task to the team's list of tasks
                   await db.collection('teams').doc(teamId).update({
-                    'tasks': FieldValue.arrayUnion([taskName])
+                    'tasks': FieldValue.arrayUnion([{
+                      'name': taskName,
+                      'isAchieved': false,
+                      'points': points,
+                    }])
                   });
 
+                  print(await db.collection('teams').doc(teamId).toString());
+
                   // Fetch the updated list of teams after adding the task
-                  fetchTeams();
+                  getTeams();
 
                   // Show a success message
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -115,21 +119,27 @@ class _TeamsPageState extends State<TeamsPage> {
     );
   }
 
-
-  void fetchTeams() async {
-    final teamSnapshot = await db.collection('teams').where('users', arrayContains: UserPage.userId).get();
-    setState(() {
-      teams = teamSnapshot.docs.map((doc) {
-        final data = doc.data();
-        final name = data['name'] as String?;
-        final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
-        final tasks = (data['tasks'] as List<dynamic>? ?? []).map((task) => Task(name: task)).toList(); // Convert task strings to Task objects
-        if (name != null) {
-          return Team(name: name, users: users, tasks: tasks);
-        }
-        return null;
-      }).where((team) => team != null).cast<Team>().toList();
-    });
+  Stream<List<Team>> getTeams() async* {
+    yield* db
+        .collection('teams')
+        .where('users', arrayContains: UserPage.userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+      final data = doc.data();
+      final name = data['name'] as String?;
+      final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
+      final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
+        final taskMap = taskData as Map<String, dynamic>;
+        final taskName = taskMap['name'] as String;
+        final isAchieved = taskMap['isAchieved'] as bool;
+        final points = taskMap['points'] as int;
+        return Task(name: taskName, isAchieved: isAchieved, points: points);
+      }).toList();
+      if (name != null) {
+        return Team(name: name, users: users, tasks: tasks);
+      }
+      return null;
+    }).where((team) => team != null).cast<Team>().toList());
   }
 
   void joinTeam(String teamName) async {
@@ -155,7 +165,7 @@ class _TeamsPageState extends State<TeamsPage> {
     }
 
     // Fetch the updated list of teams after joining
-    fetchTeams();
+    getTeams();
   }
 
   void addTeamWithUsers() {
@@ -189,7 +199,7 @@ class _TeamsPageState extends State<TeamsPage> {
                   joinTeam(teamName);
 
                   // Fetch the updated list of teams after adding
-                  fetchTeams();
+                  getTeams();
 
                   // Show a success message
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -226,7 +236,7 @@ class _TeamsPageState extends State<TeamsPage> {
                     final task = team.tasks[index];
                     return ListTile(
                       title: Text(
-                        task as String,
+                        task.name,  // Use task.name instead of casting task to a string
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -255,26 +265,8 @@ class _TeamsPageState extends State<TeamsPage> {
         title: const Text('Teams'),
         backgroundColor: Colors.deepPurple,
       ),
-      body: FutureBuilder<List<Team>>(
-        future: Future.wait(
-          teams.map((team) async {
-            final usersWithPoints = await Future.wait(
-              team.users.map((user) async {
-                final points = await getUserPoints(user);
-                return User(name: user, points: points);
-              }).toList(),
-            );
-
-            // Sort users in descending order of points
-            usersWithPoints.sort((a, b) => b.points.compareTo(a.points));
-
-            return Team(
-              name: team.name,
-              users: usersWithPoints.map((user) => user.name).toList(),
-              tasks: team.tasks,
-            );
-          }).toList(),
-        ),
+      body: StreamBuilder<List<Team>>(
+        stream: getTeams(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -323,7 +315,7 @@ class _TeamsPageState extends State<TeamsPage> {
                                   onTap: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const UserGoalPage(),
+                                      builder: (context) => UserGoalPage(userId: user),
                                     ),
                                   ),
                                 );
@@ -340,14 +332,37 @@ class _TeamsPageState extends State<TeamsPage> {
                               fontStyle: FontStyle.italic,
                             ),
                           ),
-                          trailing: Checkbox(
-                            value: task.isAchieved,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                task.isAchieved = value!;
-                              });
-                            },
-                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Text(
+                                '+${task.points} points  ',
+                                style: TextStyle(color: task.isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
+                              ),
+                              Checkbox(
+                                value: task.isAchieved,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    task.isAchieved = value!;
+                                  });
+                                  // Update the task in the Firestore database
+                                  db.collection('teams').doc(team.name.replaceAll(' ', '').toLowerCase()).update({
+                                    'tasks': team.tasks.map((t) => t == task ? {'name': task.name, 'isAchieved': task.isAchieved, 'points': task.points} : t).toList()
+                                  });
+
+                                  if(task.isAchieved) {
+                                    db.collection('users').doc(UserPage.userId).update({
+                                      'points': FieldValue.increment(task.points),
+                                    });
+                                  } else {
+                                    db.collection('users').doc(UserPage.userId).update({
+                                      'points': FieldValue.increment(-task.points),
+                                    });
+                                  }
+
+                                },
+                              ),
+                            ]),
                           tileColor: task.isAchieved ? Colors.green[100] : null,
                         )).toList(),
                       ],

@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'addGoal.dart';
-import 'leaderboard.dart';
 import 'main.dart';
 import 'teams.dart';
 
@@ -30,7 +29,10 @@ class _GoalPageState extends State<GoalPage> {
   }
 
   void loadUserPoints() async {
-    userPoints = await getUserPoints(UserPage.userId);
+    int points = await getUserPoints(UserPage.userId);
+    setState(() {
+      userPoints = points;
+    });
   }
 
   Future<int> getUserPoints(String userId) async {
@@ -43,6 +45,19 @@ class _GoalPageState extends State<GoalPage> {
       return points;
     } else {
       return 0;
+    }
+  }
+
+  Future<bool> getIsPrivate(String taskId) async {
+    final taskRef = FirebaseFirestore.instance.collection('tasks').doc(taskId);
+    final snapshot = await taskRef.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final isPrivate = data['isPrivate'] ?? false; // If isPrivate is null, it's set to false
+      return isPrivate;
+    } else {
+      return false; // Default value if the document doesn't exist
     }
   }
 
@@ -126,6 +141,10 @@ class _GoalPageState extends State<GoalPage> {
                         color: isAchieved ? Colors.green[100] : Colors.white,
                         child: ListTile(
                           title: Text(data['task'] ?? 'Default task', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16)),
+                          leading: Icon(
+                            data['isPrivate'] ?? false ? Icons.lock : Icons.lock_open, // Show different icons based on 'isPrivate'
+                            color: data['isPrivate'] ?? false ? Colors.red : Colors.green,
+                          ),
                           trailing: TextButton(
                             onPressed: () => toggleAchieved(taskId, userId, isAchieved, points),
                             child: Row(
