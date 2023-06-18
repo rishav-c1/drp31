@@ -191,7 +191,7 @@ class _TeamsPageState extends State<TeamsPage> {
         String teamName = '';
 
         return AlertDialog(
-          title: const Text('Add Team with Users'),
+          title: const Text('Create or Join Team'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -217,7 +217,7 @@ class _TeamsPageState extends State<TeamsPage> {
 
                   // Show a success message
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Team added successfully'),
+                    content: Text('Team joined successfully'),
                   ));
 
                   Navigator.pop(context);
