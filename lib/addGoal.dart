@@ -11,7 +11,7 @@ class AddGoalPage extends StatefulWidget {
 }
 
 class _AddGoalPageState extends State<AddGoalPage> {
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  static FirebaseFirestore db = FirebaseFirestore.instance;
   final goalController = TextEditingController();
   final pointController = TextEditingController();
   bool isPrivate = false;

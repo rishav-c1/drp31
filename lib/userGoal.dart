@@ -2,8 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class UserGoalPage extends StatefulWidget {
-
-  const UserGoalPage({Key? key, required this.userId}):super(key:key);
+  const UserGoalPage({Key? key, required this.userId}) : super(key: key);
 
   final String userId;
 
@@ -12,54 +11,27 @@ class UserGoalPage extends StatefulWidget {
 }
 
 class _UserGoalPageState extends State<UserGoalPage> {
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  static FirebaseFirestore db = FirebaseFirestore.instance;
 
-  late int userPoints = 0;
-  late String userId = widget.userId;
+  late Stream<int> userPointsStream;
 
   @override
   void initState() {
     super.initState();
-    userId = widget.userId;
-    loadUserPoints();
+    userPointsStream = getUserPoints(widget.userId);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  void loadUserPoints() async {
-    int points = await getUserPoints(userId);
-    setState(() {
-      userPoints = points;
-    });
-  }
-
-  Future<int> getUserPoints(String userId) async {
+  Stream<int> getUserPoints(String userId) {
     final userRef = db.collection('users').doc(userId);
-    final snapshot = await userRef.get();
-
-    if (snapshot.exists) {
-      final data = snapshot.data() as Map<String, dynamic>;
-      final points = data['points'];
-      return points;
-    } else {
-      return 0;
-    }
-  }
-
-  Future<bool> getIsPrivate(String taskId) async {
-    final taskRef = FirebaseFirestore.instance.collection('tasks').doc(taskId);
-    final snapshot = await taskRef.get();
-
-    if (snapshot.exists) {
-      final data = snapshot.data() as Map<String, dynamic>;
-      final isPrivate = data['isPrivate'] ?? false; // If isPrivate is null, it's set to false
-      return isPrivate;
-    } else {
-      return false; // Default value if the document doesn't exist
-    }
+    return userRef.snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final points = data['points'] ?? 0;
+        return points;
+      } else {
+        return 0;
+      }
+    });
   }
 
   @override
@@ -67,7 +39,7 @@ class _UserGoalPageState extends State<UserGoalPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "$userId's Goals",
+          "${widget.userId}'s Goals",
           style: const TextStyle(fontFamily: 'Roboto', fontSize: 24, color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple,
@@ -78,17 +50,27 @@ class _UserGoalPageState extends State<UserGoalPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const SizedBox(height: 60),
-            Text(
-              "$userPoints AscentPoints ✨",
-              style: TextStyle(
-                  fontSize: 26,
-                  color: Colors.green[500],
-                  fontFamily: 'Roboto'),
+            StreamBuilder<int>(
+              stream: userPointsStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else {
+                  final points = snapshot.data ?? 0;
+                  return Text(
+                    "$points AscentPoints ✨",
+                    style: TextStyle(
+                        fontSize: 26,
+                        color: Colors.green[500],
+                        fontFamily: 'Roboto'),
+                  );
+                }
+              },
             ),
             const SizedBox(height: 32),
             Flexible(
               child: StreamBuilder<QuerySnapshot>(
-                stream: db.collection('tasks').where('userId', isEqualTo: userId).snapshots(),
+                stream: db.collection('tasks').where('userId', isEqualTo: widget.userId).snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
