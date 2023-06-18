@@ -1,6 +1,7 @@
 import 'package:drp31/main.dart';
 import 'package:drp31/userGoal.dart';
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -56,17 +57,19 @@ class _TeamsPageState extends State<TeamsPage> {
     });
   }
 
-  Future<List<Map<String, dynamic>>> getUserData(Team team) async {
-    List<Future<Map<String, dynamic>>> userFutures =
-        team.users.map((user) async {
-      int points = (getUserPoints(user)) as int;
-      return {'user': user, 'points': points};
+  Stream<List<Map<String, dynamic>>> getUserData(Team team) {
+    List<Stream<Map<String, dynamic>>> userStreams = team.users.map((user) {
+      return getUserPoints(user).map((points) {
+        return {'user': user, 'points': points};
+      });
     }).toList();
 
-    List<Map<String, dynamic>> usersWithPoints = await Future.wait(userFutures);
-    usersWithPoints.sort((a, b) => b['points'].compareTo(a['points']));
-
-    return usersWithPoints;
+    // Convert List<Stream<Map<String, dynamic>>> to Stream<List<Map<String, dynamic>>>
+    return CombineLatestStream.list(userStreams).map((usersWithPoints) {
+      List<Map<String, dynamic>> modifiableList = List.from(usersWithPoints);
+      modifiableList.sort((a, b) => b['points'].compareTo(a['points']));
+      return modifiableList;
+    });
   }
 
   void addTaskToTeam(Team team) {
@@ -323,11 +326,10 @@ class _TeamsPageState extends State<TeamsPage> {
                       ),
                       subtitle: Text('${team.memberCount} members'),
                       children: <Widget>[
-                        FutureBuilder<List<Map<String, dynamic>>>(
-                          future: getUserData(team),
+                        StreamBuilder<List<Map<String, dynamic>>>(
+                          stream: getUserData(team),
                           builder: (BuildContext context,
-                              AsyncSnapshot<List<Map<String, dynamic>>>
-                                  snapshot) {
+                              AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const CircularProgressIndicator();
@@ -339,38 +341,35 @@ class _TeamsPageState extends State<TeamsPage> {
                                 return Column(
                                   children: usersWithPoints
                                       .map((userData) => ListTile(
-                                            leading: Text(
-                                                '${usersWithPoints.indexOf(userData) + 1}',
-                                                style: const TextStyle(
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: 17,
-                                                    color: Colors.deepPurple)),
-                                            title: Text(userData['user'],
-                                                style: const TextStyle(
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: 17,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            subtitle: Text(
-                                                '${userData['points']} Points',
-                                                style: const TextStyle(
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: 16,
-                                                    color: Colors.black54)),
-                                            tileColor: userData['user'] ==
-                                                    UserPage.userId
-                                                ? Colors.deepPurple[50]
-                                                : Colors.white,
-                                            onTap: () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    UserGoalPage(
-                                                        userId:
-                                                            userData['user']),
-                                              ),
-                                            ),
-                                          ))
+                                    leading: Text(
+                                        '${usersWithPoints.indexOf(userData) + 1}',
+                                        style: const TextStyle(
+                                            fontFamily: 'Roboto',
+                                            fontSize: 17,
+                                            color: Colors.deepPurple)),
+                                    title: Text(userData['user'],
+                                        style: const TextStyle(
+                                            fontFamily: 'Roboto',
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold)),
+                                    subtitle: Text('${userData['points']} Points',
+                                        style: const TextStyle(
+                                            fontFamily: 'Roboto',
+                                            fontSize: 16,
+                                            color: Colors.black54)),
+                                    tileColor: userData['user'] ==
+                                        UserPage.userId
+                                        ? Colors.deepPurple[50]
+                                        : Colors.white,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UserGoalPage(
+                                                userId: userData['user']),
+                                      ),
+                                    ),
+                                  ))
                                       .toList(),
                                 );
                               }
