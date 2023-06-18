@@ -58,7 +58,6 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
   void addTaskToTeam(Team team) {
-    print("addTaskToTeam() called");
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -88,7 +87,6 @@ class _TeamsPageState extends State<TeamsPage> {
             ),
             TextButton(
               onPressed: () async {
-                print("Task Name: ${taskNameController.text}, Points: ${pointsController.text}");
                 String taskName = taskNameController.text;
                 int? points = int.tryParse(pointsController.text);
                 if (taskName.isNotEmpty && points != null) {
@@ -108,8 +106,6 @@ class _TeamsPageState extends State<TeamsPage> {
                     }).toList()
                   });
 
-                  print('Task added successfully');
-
                   // Fetch the updated list of teams after adding the task
                   getTeams();
 
@@ -119,8 +115,6 @@ class _TeamsPageState extends State<TeamsPage> {
                   ));
 
                   Navigator.pop(context);
-                } else {
-                  print("Invalid inputs. Task name: '$taskName', points: '$points'");
                 }
               },
               child: const Text('Add'),

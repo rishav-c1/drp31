@@ -129,7 +129,7 @@ class _AddGoalPageState extends State<AddGoalPage> {
                     elevation:
                         MaterialStateProperty.all(0), // Remove elevation/shadow
                   ),
-                  child: Icon(Icons.add,
+                  child: const Icon(Icons.add,
                       size: 32, color: Colors.white), // Plus icon
                 ),
               ),
