@@ -12,7 +12,7 @@ class UserGoalPage extends StatefulWidget {
 }
 
 class _UserGoalPageState extends State<UserGoalPage> {
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  static FirebaseFirestore db = FirebaseFirestore.instance;
 
   late int userPoints = 0;
   late String userId = widget.userId;
