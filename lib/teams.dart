@@ -58,11 +58,12 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
   void addTaskToTeam(Team team) {
+    print("addTaskToTeam() called");
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String taskName = '';
-        int points = 0;
+        TextEditingController taskNameController = TextEditingController();
+        TextEditingController pointsController = TextEditingController();
 
         return AlertDialog(
           title: Text('Add Goal to ${team.name}'),
@@ -70,12 +71,13 @@ class _TeamsPageState extends State<TeamsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                onChanged: (value) => taskName = value,
+                controller: taskNameController,
                 decoration: const InputDecoration(labelText: 'Task Name'),
               ),
               TextField(
-                onChanged: (value) => points = value as int,
+                controller: pointsController,
                 decoration: const InputDecoration(labelText: 'Points'),
+                keyboardType: TextInputType.number,
               ),
             ],
           ),
@@ -86,19 +88,27 @@ class _TeamsPageState extends State<TeamsPage> {
             ),
             TextButton(
               onPressed: () async {
-                if (taskName.isNotEmpty) {
-                  String teamId = team.name.replaceAll(' ', '').toLowerCase();
+                print("Task Name: ${taskNameController.text}, Points: ${pointsController.text}");
+                String taskName = taskNameController.text;
+                int? points = int.tryParse(pointsController.text);
+                if (taskName.isNotEmpty && points != null) {
 
-                  // Add the task to the team's list of tasks
-                  await db.collection('teams').doc(teamId).update({
-                    'tasks': FieldValue.arrayUnion([{
-                      'name': taskName,
-                      'isAchieved': false,
-                      'points': points,
-                    }])
+                  // Get the current tasks
+                  final currentTasks = team.tasks;
+
+                  // Add the new task
+                  currentTasks.add(Task(name: taskName, isAchieved: false, points: points));
+
+                  // Update the tasks in Firestore
+                  await db.collection('teams').doc(team.name).update({
+                    'tasks': currentTasks.map((task) => {
+                      'name': task.name,
+                      'isAchieved': task.isAchieved,
+                      'points': task.points,
+                    }).toList()
                   });
 
-                  print(await db.collection('teams').doc(teamId).toString());
+                  print('Task added successfully');
 
                   // Fetch the updated list of teams after adding the task
                   getTeams();
@@ -109,6 +119,8 @@ class _TeamsPageState extends State<TeamsPage> {
                   ));
 
                   Navigator.pop(context);
+                } else {
+                  print("Invalid inputs. Task name: '$taskName', points: '$points'");
                 }
               },
               child: const Text('Add'),
@@ -118,6 +130,7 @@ class _TeamsPageState extends State<TeamsPage> {
       },
     );
   }
+
 
   Stream<List<Team>> getTeams() async* {
     yield* db
@@ -143,7 +156,7 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
   void joinTeam(String teamName) async {
-    String teamId = teamName.replaceAll(' ', '').toLowerCase();
+    String teamId = teamName.replaceAll(' ', '');
 
     // Check if the team exists in the database
     final teamRef = db.collection('teams').doc(teamId);
@@ -193,8 +206,6 @@ class _TeamsPageState extends State<TeamsPage> {
             TextButton(
               onPressed: () async {
                 if (teamName.isNotEmpty) {
-                  String teamId = teamName.replaceAll(' ', '').toLowerCase();
-
                   // Create a new team with the user
                   joinTeam(teamName);
 
@@ -345,12 +356,22 @@ class _TeamsPageState extends State<TeamsPage> {
                                   setState(() {
                                     task.isAchieved = value!;
                                   });
-                                  // Update the task in the Firestore database
-                                  db.collection('teams').doc(team.name.replaceAll(' ', '').toLowerCase()).update({
-                                    'tasks': team.tasks.map((t) => t == task ? {'name': task.name, 'isAchieved': task.isAchieved, 'points': task.points} : t).toList()
-                                  });
 
-                                  if(task.isAchieved) {
+                                  // Get the updated tasks list
+                                  List<Map<String, dynamic>> updatedTasks = team.tasks
+                                      .map((t) => {
+                                    'name': t.name,
+                                    'isAchieved': t == task ? task.isAchieved : t.isAchieved,
+                                    'points': t.points,
+                                  })
+                                      .toList();
+
+                                  // Update the tasks in Firestore
+                                  db.collection('teams').doc(team.name)
+                                      .update({'tasks': updatedTasks});
+
+                                  // Update the points
+                                  if (value == true) {
                                     db.collection('users').doc(UserPage.userId).update({
                                       'points': FieldValue.increment(task.points),
                                     });
@@ -359,7 +380,6 @@ class _TeamsPageState extends State<TeamsPage> {
                                       'points': FieldValue.increment(-task.points),
                                     });
                                   }
-
                                 },
                               ),
                             ]),
