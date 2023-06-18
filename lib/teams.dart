@@ -137,22 +137,31 @@ class _TeamsPageState extends State<TeamsPage> {
         .collection('teams')
         .where('users', arrayContains: UserPage.userId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-      final data = doc.data();
-      final name = data['name'] as String?;
-      final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
-      final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
-        final taskMap = taskData as Map<String, dynamic>;
-        final taskName = taskMap['name'] as String;
-        final isAchieved = taskMap['isAchieved'] as bool;
-        final points = taskMap['points'] as int;
-        return Task(name: taskName, isAchieved: isAchieved, points: points);
-      }).toList();
-      if (name != null) {
-        return Team(name: name, users: users, tasks: tasks);
-      }
-      return null;
-    }).where((team) => team != null).cast<Team>().toList());
+        .asyncMap((snapshot) async {
+      return await Future.wait(snapshot.docs.map((doc) async {
+        final data = doc.data();
+        final name = data['name'] as String?;
+        final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
+        final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
+          final taskMap = taskData as Map<String, dynamic>;
+          final taskName = taskMap['name'] as String;
+          final isAchieved = taskMap['isAchieved'] as bool;
+          final points = taskMap['points'] as int;
+          return Task(name: taskName, isAchieved: isAchieved, points: points);
+        }).toList();
+
+        if (name != null) {
+          // Get the points for each user and sort
+          final userPoints = await Future.wait(users.map((userId) async {
+            return {userId: await getUserPoints(userId)};
+          }));
+          userPoints.sort((a, b) => b.values.first.compareTo(a.values.first));
+          final sortedUsers = userPoints.map((e) => e.keys.first).toList();
+          return Team(name: name, users: sortedUsers, tasks: tasks);
+        }
+        return null;
+      }));
+    }).map((teams) => teams.where((team) => team != null).cast<Team>().toList());
   }
 
   void joinTeam(String teamName) async {
