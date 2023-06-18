@@ -12,7 +12,7 @@ class WeeklyRecapPage extends StatefulWidget {
 }
 
 class _WeeklyRecapPage extends State<WeeklyRecapPage> with SingleTickerProviderStateMixin {
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  static FirebaseFirestore db = FirebaseFirestore.instance;
   late AnimationController controller;
 
   @override
