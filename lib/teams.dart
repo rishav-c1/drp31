@@ -1,6 +1,7 @@
 import 'package:drp31/main.dart';
 import 'package:drp31/userGoal.dart';
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -35,7 +36,7 @@ class TeamsPage extends StatefulWidget {
 }
 
 class _TeamsPageState extends State<TeamsPage> {
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  static FirebaseFirestore db = FirebaseFirestore.instance;
   List<Team> teams = [];
 
   @override
@@ -44,17 +45,31 @@ class _TeamsPageState extends State<TeamsPage> {
     Timer.periodic(const Duration(milliseconds: 500), (Timer t) => getTeams());
   }
 
-  Future<int> getUserPoints(String userId) async {
-    final userRef = db.collection('users').doc(userId);
-    final snapshot = await userRef.get();
+  Stream<int> getUserPoints(String userId) {
+    return db.collection('users').doc(userId).snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final points = data['points'];
+        return points;
+      } else {
+        return 0;
+      }
+    });
+  }
 
-    if (snapshot.exists) {
-      final data = snapshot.data() as Map<String, dynamic>;
-      final points = data['points'];
-      return points;
-    } else {
-      return 0;
-    }
+  Stream<List<Map<String, dynamic>>> getUserData(Team team) {
+    List<Stream<Map<String, dynamic>>> userStreams = team.users.map((user) {
+      return getUserPoints(user).map((points) {
+        return {'user': user, 'points': points};
+      });
+    }).toList();
+
+    // Convert List<Stream<Map<String, dynamic>>> to Stream<List<Map<String, dynamic>>>
+    return CombineLatestStream.list(userStreams).map((usersWithPoints) {
+      List<Map<String, dynamic>> modifiableList = List.from(usersWithPoints);
+      modifiableList.sort((a, b) => b['points'].compareTo(a['points']));
+      return modifiableList;
+    });
   }
 
   void addTaskToTeam(Team team) {
@@ -74,8 +89,11 @@ class _TeamsPageState extends State<TeamsPage> {
                 decoration: const InputDecoration(labelText: 'Task Name'),
               ),
               TextField(
-                onChanged: (value) => points = value as int,
+                onChanged: (value) => points = int.parse(value),
+                // Parse the string value to an integer
                 decoration: const InputDecoration(labelText: 'Points'),
+                keyboardType: TextInputType
+                    .number, // Ensure a number keyboard is shown for this input
               ),
             ],
           ),
@@ -91,11 +109,13 @@ class _TeamsPageState extends State<TeamsPage> {
 
                   // Add the task to the team's list of tasks
                   await db.collection('teams').doc(teamId).update({
-                    'tasks': FieldValue.arrayUnion([{
-                      'name': taskName,
-                      'isAchieved': false,
-                      'points': points,
-                    }])
+                    'tasks': FieldValue.arrayUnion([
+                      {
+                        'name': taskName,
+                        'isAchieved': false,
+                        'points': points,
+                      }
+                    ])
                   });
 
                   print(await db.collection('teams').doc(teamId).toString());
@@ -124,22 +144,29 @@ class _TeamsPageState extends State<TeamsPage> {
         .collection('teams')
         .where('users', arrayContains: UserPage.userId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-      final data = doc.data();
-      final name = data['name'] as String?;
-      final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
-      final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
-        final taskMap = taskData as Map<String, dynamic>;
-        final taskName = taskMap['name'] as String;
-        final isAchieved = taskMap['isAchieved'] as bool;
-        final points = taskMap['points'] as int;
-        return Task(name: taskName, isAchieved: isAchieved, points: points);
-      }).toList();
-      if (name != null) {
-        return Team(name: name, users: users, tasks: tasks);
-      }
-      return null;
-    }).where((team) => team != null).cast<Team>().toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) {
+              final data = doc.data();
+              final name = data['name'] as String?;
+              final users =
+                  List<String>.from(data['users'] as List<dynamic>? ?? []);
+              final tasks =
+                  (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
+                final taskMap = taskData as Map<String, dynamic>;
+                final taskName = taskMap['name'] as String;
+                final isAchieved = taskMap['isAchieved'] as bool;
+                final points = taskMap['points'] as int;
+                return Task(
+                    name: taskName, isAchieved: isAchieved, points: points);
+              }).toList();
+              if (name != null) {
+                return Team(name: name, users: users, tasks: tasks);
+              }
+              return null;
+            })
+            .where((team) => team != null)
+            .cast<Team>()
+            .toList());
   }
 
   void joinTeam(String teamName) async {
@@ -236,7 +263,8 @@ class _TeamsPageState extends State<TeamsPage> {
                     final task = team.tasks[index];
                     return ListTile(
                       title: Text(
-                        task.name,  // Use task.name instead of casting task to a string
+                        task.name,
+                        // Use task.name instead of casting task to a string
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -293,78 +321,133 @@ class _TeamsPageState extends State<TeamsPage> {
                       ),
                       title: Text(
                         team.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
                       ),
                       subtitle: Text('${team.memberCount} members'),
                       children: <Widget>[
-                        ...team.users.map((user) => FutureBuilder<int>(
-                          future: getUserPoints(user),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                        StreamBuilder<List<Map<String, dynamic>>>(
+                          stream: getUserData(team),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
                               return const CircularProgressIndicator();
                             } else {
                               if (snapshot.hasError) {
                                 return Text('Error: ${snapshot.error}');
                               } else {
-                                final userPoints = snapshot.data;
-                                return ListTile(
-                                  leading: Text('${team.users.indexOf(user) + 1}', style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, color: Colors.deepPurple)),
-                                  title: Text(user, style: const TextStyle(fontFamily: 'Roboto', fontSize: 17, fontWeight: FontWeight.bold)),
-                                  subtitle: Text('$userPoints Points', style: const TextStyle(fontFamily: 'Roboto', fontSize: 16, color: Colors.black54)),
-                                  tileColor: user == UserPage.userId ? Colors.deepPurple[50] : Colors.white,
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => UserGoalPage(userId: user),
+                                final usersWithPoints = snapshot.data!;
+                                return Column(
+                                  children: usersWithPoints
+                                      .map((userData) => ListTile(
+                                    leading: Text(
+                                        '${usersWithPoints.indexOf(userData) + 1}',
+                                        style: const TextStyle(
+                                            fontFamily: 'Roboto',
+                                            fontSize: 17,
+                                            color: Colors.deepPurple)),
+                                    title: Text(userData['user'],
+                                        style: const TextStyle(
+                                            fontFamily: 'Roboto',
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold)),
+                                    subtitle: Text('${userData['points']} Points',
+                                        style: const TextStyle(
+                                            fontFamily: 'Roboto',
+                                            fontSize: 16,
+                                            color: Colors.black54)),
+                                    tileColor: userData['user'] ==
+                                        UserPage.userId
+                                        ? Colors.deepPurple[50]
+                                        : Colors.white,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UserGoalPage(
+                                                userId: userData['user']),
+                                      ),
                                     ),
-                                  ),
+                                  ))
+                                      .toList(),
                                 );
                               }
                             }
                           },
-                        )).toList(),
+                        ),
                         const Divider(),
-                        ...team.tasks.map((task) => ListTile(
-                          title: Text(
-                            task.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Text(
-                                '+${task.points} points  ',
-                                style: TextStyle(color: task.isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
-                              ),
-                              Checkbox(
-                                value: task.isAchieved,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    task.isAchieved = value!;
-                                  });
-                                  // Update the task in the Firestore database
-                                  db.collection('teams').doc(team.name.replaceAll(' ', '').toLowerCase()).update({
-                                    'tasks': team.tasks.map((t) => t == task ? {'name': task.name, 'isAchieved': task.isAchieved, 'points': task.points} : t).toList()
-                                  });
+                        ...team.tasks
+                            .map((task) => ListTile(
+                                  title: Text(
+                                    task.name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: <Widget>[
+                                        Text(
+                                          '+${task.points} points  ',
+                                          style: TextStyle(
+                                              color: task.isAchieved
+                                                  ? Colors.green
+                                                  : Colors.black54,
+                                              fontFamily: 'Roboto',
+                                              fontSize: 16),
+                                        ),
+                                        Checkbox(
+                                          value: task.isAchieved,
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              task.isAchieved = value!;
+                                            });
+                                            // Update the task in the Firestore database
+                                            db
+                                                .collection('teams')
+                                                .doc(team.name
+                                                    .replaceAll(' ', '')
+                                                    .toLowerCase())
+                                                .update({
+                                              'tasks': team.tasks
+                                                  .map((t) => t == task
+                                                      ? {
+                                                          'name': task.name,
+                                                          'isAchieved':
+                                                              task.isAchieved,
+                                                          'points': task.points
+                                                        }
+                                                      : t)
+                                                  .toList()
+                                            });
 
-                                  if(task.isAchieved) {
-                                    db.collection('users').doc(UserPage.userId).update({
-                                      'points': FieldValue.increment(task.points),
-                                    });
-                                  } else {
-                                    db.collection('users').doc(UserPage.userId).update({
-                                      'points': FieldValue.increment(-task.points),
-                                    });
-                                  }
-
-                                },
-                              ),
-                            ]),
-                          tileColor: task.isAchieved ? Colors.green[100] : null,
-                        )).toList(),
+                                            if (task.isAchieved) {
+                                              db
+                                                  .collection('users')
+                                                  .doc(UserPage.userId)
+                                                  .update({
+                                                'points': FieldValue.increment(
+                                                    task.points),
+                                              });
+                                            } else {
+                                              db
+                                                  .collection('users')
+                                                  .doc(UserPage.userId)
+                                                  .update({
+                                                'points': FieldValue.increment(
+                                                    -task.points),
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ]),
+                                  tileColor: task.isAchieved
+                                      ? Colors.green[100]
+                                      : null,
+                                ))
+                            .toList(),
                       ],
                     ),
                   );
@@ -400,12 +483,12 @@ class _TeamsPageState extends State<TeamsPage> {
         onTap: (int index) {
           switch (index) {
             case 0:
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => const MyHomePage()));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const MyHomePage()));
               break;
             case 1:
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => const GoalPage()));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const GoalPage()));
               break;
           }
         },
