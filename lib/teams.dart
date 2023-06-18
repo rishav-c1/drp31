@@ -73,11 +73,12 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
   void addTaskToTeam(Team team) {
+    print("addTaskToTeam() called");
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String taskName = '';
-        int points = 0;
+        TextEditingController taskNameController = TextEditingController();
+        TextEditingController pointsController = TextEditingController();
 
         return AlertDialog(
           title: Text('Add Goal to ${team.name}'),
@@ -85,15 +86,13 @@ class _TeamsPageState extends State<TeamsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                onChanged: (value) => taskName = value,
+                controller: taskNameController,
                 decoration: const InputDecoration(labelText: 'Task Name'),
               ),
               TextField(
-                onChanged: (value) => points = int.parse(value),
-                // Parse the string value to an integer
+                controller: pointsController,
                 decoration: const InputDecoration(labelText: 'Points'),
-                keyboardType: TextInputType
-                    .number, // Ensure a number keyboard is shown for this input
+                keyboardType: TextInputType.number,
               ),
             ],
           ),
@@ -104,21 +103,27 @@ class _TeamsPageState extends State<TeamsPage> {
             ),
             TextButton(
               onPressed: () async {
-                if (taskName.isNotEmpty) {
-                  String teamId = team.name.replaceAll(' ', '').toLowerCase();
+                print("Task Name: ${taskNameController.text}, Points: ${pointsController.text}");
+                String taskName = taskNameController.text;
+                int? points = int.tryParse(pointsController.text);
+                if (taskName.isNotEmpty && points != null) {
 
-                  // Add the task to the team's list of tasks
-                  await db.collection('teams').doc(teamId).update({
-                    'tasks': FieldValue.arrayUnion([
-                      {
-                        'name': taskName,
-                        'isAchieved': false,
-                        'points': points,
-                      }
-                    ])
+                  // Get the current tasks
+                  final currentTasks = team.tasks;
+
+                  // Add the new task
+                  currentTasks.add(Task(name: taskName, isAchieved: false, points: points));
+
+                  // Update the tasks in Firestore
+                  await db.collection('teams').doc(team.name).update({
+                    'tasks': currentTasks.map((task) => {
+                      'name': task.name,
+                      'isAchieved': task.isAchieved,
+                      'points': task.points,
+                    }).toList()
                   });
 
-                  print(await db.collection('teams').doc(teamId).toString());
+                  print('Task added successfully');
 
                   // Fetch the updated list of teams after adding the task
                   getTeams();
@@ -129,6 +134,8 @@ class _TeamsPageState extends State<TeamsPage> {
                   ));
 
                   Navigator.pop(context);
+                } else {
+                  print("Invalid inputs. Task name: '$taskName', points: '$points'");
                 }
               },
               child: const Text('Add'),
@@ -139,38 +146,41 @@ class _TeamsPageState extends State<TeamsPage> {
     );
   }
 
+
   Stream<List<Team>> getTeams() async* {
     yield* db
         .collection('teams')
         .where('users', arrayContains: UserPage.userId)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) {
-              final data = doc.data();
-              final name = data['name'] as String?;
-              final users =
-                  List<String>.from(data['users'] as List<dynamic>? ?? []);
-              final tasks =
-                  (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
-                final taskMap = taskData as Map<String, dynamic>;
-                final taskName = taskMap['name'] as String;
-                final isAchieved = taskMap['isAchieved'] as bool;
-                final points = taskMap['points'] as int;
-                return Task(
-                    name: taskName, isAchieved: isAchieved, points: points);
-              }).toList();
-              if (name != null) {
-                return Team(name: name, users: users, tasks: tasks);
-              }
-              return null;
-            })
-            .where((team) => team != null)
-            .cast<Team>()
-            .toList());
+        .asyncMap((snapshot) async {
+      return await Future.wait(snapshot.docs.map((doc) async {
+        final data = doc.data();
+        final name = data['name'] as String?;
+        final users = List<String>.from(data['users'] as List<dynamic>? ?? []);
+        final tasks = (data['tasks'] as List<dynamic>? ?? []).map((taskData) {
+          final taskMap = taskData as Map<String, dynamic>;
+          final taskName = taskMap['name'] as String;
+          final isAchieved = taskMap['isAchieved'] as bool;
+          final points = taskMap['points'] as int;
+          return Task(name: taskName, isAchieved: isAchieved, points: points);
+        }).toList();
+
+        if (name != null) {
+          // Get the points for each user and sort
+          final userPoints = await Future.wait(users.map((userId) async {
+            return {userId: await getUserPoints(userId)};
+          }));
+          userPoints.sort((a, b) => b.values.first.compareTo(a.values.first));
+          final sortedUsers = userPoints.map((e) => e.keys.first).toList();
+          return Team(name: name, users: sortedUsers, tasks: tasks);
+        }
+        return null;
+      }));
+    }).map((teams) => teams.where((team) => team != null).cast<Team>().toList());
   }
 
   void joinTeam(String teamName) async {
-    String teamId = teamName.replaceAll(' ', '').toLowerCase();
+    String teamId = teamName.replaceAll(' ', '');
 
     // Check if the team exists in the database
     final teamRef = db.collection('teams').doc(teamId);
@@ -220,8 +230,6 @@ class _TeamsPageState extends State<TeamsPage> {
             TextButton(
               onPressed: () async {
                 if (teamName.isNotEmpty) {
-                  String teamId = teamName.replaceAll(' ', '').toLowerCase();
-
                   // Create a new team with the user
                   joinTeam(teamName);
 
@@ -377,77 +385,56 @@ class _TeamsPageState extends State<TeamsPage> {
                           },
                         ),
                         const Divider(),
-                        ...team.tasks
-                            .map((task) => ListTile(
-                                  title: Text(
-                                    task.name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                  trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: <Widget>[
-                                        Text(
-                                          '+${task.points} points  ',
-                                          style: TextStyle(
-                                              color: task.isAchieved
-                                                  ? Colors.green
-                                                  : Colors.black54,
-                                              fontFamily: 'Roboto',
-                                              fontSize: 16),
-                                        ),
-                                        Checkbox(
-                                          value: task.isAchieved,
-                                          onChanged: (bool? value) {
-                                            setState(() {
-                                              task.isAchieved = value!;
-                                            });
-                                            // Update the task in the Firestore database
-                                            db
-                                                .collection('teams')
-                                                .doc(team.name
-                                                    .replaceAll(' ', '')
-                                                    .toLowerCase())
-                                                .update({
-                                              'tasks': team.tasks
-                                                  .map((t) => t == task
-                                                      ? {
-                                                          'name': task.name,
-                                                          'isAchieved':
-                                                              task.isAchieved,
-                                                          'points': task.points
-                                                        }
-                                                      : t)
-                                                  .toList()
-                                            });
+                        ...team.tasks.map((task) => ListTile(
+                          title: Text(
+                            task.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Text(
+                                '+${task.points} points  ',
+                                style: TextStyle(color: task.isAchieved ? Colors.green : Colors.black54, fontFamily: 'Roboto', fontSize: 16),
+                              ),
+                              Checkbox(
+                                value: task.isAchieved,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    task.isAchieved = value!;
+                                  });
 
-                                            if (task.isAchieved) {
-                                              db
-                                                  .collection('users')
-                                                  .doc(UserPage.userId)
-                                                  .update({
-                                                'points': FieldValue.increment(
-                                                    task.points),
-                                              });
-                                            } else {
-                                              db
-                                                  .collection('users')
-                                                  .doc(UserPage.userId)
-                                                  .update({
-                                                'points': FieldValue.increment(
-                                                    -task.points),
-                                              });
-                                            }
-                                          },
-                                        ),
-                                      ]),
-                                  tileColor: task.isAchieved
-                                      ? Colors.green[100]
-                                      : null,
-                                ))
-                            .toList(),
+                                  // Get the updated tasks list
+                                  List<Map<String, dynamic>> updatedTasks = team.tasks
+                                      .map((t) => {
+                                    'name': t.name,
+                                    'isAchieved': t == task ? task.isAchieved : t.isAchieved,
+                                    'points': t.points,
+                                  })
+                                      .toList();
+
+                                  // Update the tasks in Firestore
+                                  db.collection('teams').doc(team.name)
+                                      .update({'tasks': updatedTasks});
+
+                                  // Update the points
+                                  if (value == true) {
+                                    db.collection('users').doc(UserPage.userId).update({
+                                      'points': FieldValue.increment(task.points),
+                                    });
+                                  } else {
+                                    db.collection('users').doc(UserPage.userId).update({
+                                      'points': FieldValue.increment(-task.points),
+                                    });
+                                  }
+                                },
+                              ),
+                            ]),
+                          tileColor: task.isAchieved ? Colors.green[100] : null,
+                        )).toList(),
                       ],
                     ),
                   );
