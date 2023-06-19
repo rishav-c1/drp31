@@ -86,7 +86,13 @@ class _MyHomePage extends State<MyHomePage> {
                       ),
                     ),
                     TextSpan(
-                      text: ' 100 points, and your ',
+                      text: ' 100 points,',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                    TextSpan(
+                      text: '\nand your ',
                     ),
                     TextSpan(
                       text: 'hardest goals',
@@ -96,7 +102,13 @@ class _MyHomePage extends State<MyHomePage> {
                       ),
                     ),
                     TextSpan(
-                      text: ' 500 points. Anything else is in between!',
+                        text: ' 500 points,',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold
+                        )
+                    ),
+                    TextSpan(
+                      text: '\nAnything else is in between!',
                     ),
                   ],
                 ),
