@@ -58,7 +58,7 @@ class _MyHomePage extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(
+              const Text(
                 'Remember',
                 style: TextStyle(
                   fontSize: 24,
@@ -70,7 +70,7 @@ class _MyHomePage extends State<MyHomePage> {
               const SizedBox(height: 10.0),
               RichText(
                 textAlign: TextAlign.center,
-                text: TextSpan(
+                text: const TextSpan(
                   text: 'Rate your ',
                   style: TextStyle(
                     fontSize: 16,
@@ -144,7 +144,7 @@ class _MyHomePage extends State<MyHomePage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
+              const Text(
                 'Here\'s what you\'ve missed...',
                 style: TextStyle(
                   fontSize: 20,
