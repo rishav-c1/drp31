@@ -58,6 +58,60 @@ class _MyHomePage extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              Text(
+                'Remember',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 10.0),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  text: 'Rate your ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Roboto',
+                    color: Colors.black,
+                  ),
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'easiest goals',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' 100 points, and your ',
+                    ),
+                    TextSpan(
+                      text: 'hardest goals',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' 500 points. Anything else is in between!',
+                    ),
+                  ],
+                ),
+              ),
+
+
+              const SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
+
+              const SizedBox(
+                height: 20.0,
+              ),
+
               const CircleAvatar(
                 backgroundColor: Colors.deepPurple,
                 radius: 60,
@@ -78,16 +132,14 @@ class _MyHomePage extends State<MyHomePage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(
-                height: 20.0,
-              ),
-              const Text(
+              Text(
                 'Here\'s what you\'ve missed...',
                 style: TextStyle(
                   fontSize: 20,
                   fontFamily: 'Roboto',
                 ),
               ),
+
             ],
           ),
         ),
